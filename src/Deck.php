@@ -23,6 +23,15 @@ class Deck
         shuffle($this->cards);
     }
 
+    public function cut()
+    {
+        $cut = rand(1, 51);
+        $this->cards = array_merge(
+            array_slice($this->cards, $cut),
+            array_slice($this->cards, 0, $cut)
+        );
+    }
+
     public function dealCard()
     {
         return array_pop($this->cards);

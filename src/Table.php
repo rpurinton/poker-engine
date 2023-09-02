@@ -5,14 +5,14 @@ namespace RPurinton\poker;
 require_once(__DIR__ . '/TableStatus.php');
 require_once(__DIR__ . '/GameType.php');
 require_once(__DIR__ . '/Seat.php');
+require_once(__DIR__ . '/Deck.php');
 
 class Table
 {
-    private int $id = 0;
-    private TableStatus $status = TableStatus::WAITING_FOR_PLAYERS;
-    private ?GameType $gameType = null;
     public array $seats = [];
     private array $config = [
+        "id" => null,
+        "status" => TableStatus::WAITING_FOR_PLAYERS,
         "seats" => 9,
         "smallBlind" => 1,
         "bigBlind" => 2,
@@ -22,11 +22,16 @@ class Table
         "buttonstraddle" => false,
         "straddleAmount" => 4,
     ];
+    public ?Deck $deck = null;
+    public array $pots = [];
+    public array $communityCards = [];
+    public array $muck = [];
 
     public function __construct(array $config = [])
     {
         $this->config = array_merge($this->config, $config);
         $this->createSeats();
+        $this->deck = new Deck();
     }
 
     public function getSeats(): array
@@ -36,12 +41,12 @@ class Table
 
     public function getGameType(): ?GameType
     {
-        return $this->gameType;
+        return $this->config['gametype'];
     }
 
     public function setGameType(GameType $gameType): void
     {
-        $this->gameType = $gameType;
+        $this->config['gametype'] = $gameType;
     }
 
     public function getConfig(): array
