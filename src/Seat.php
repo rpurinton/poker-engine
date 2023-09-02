@@ -81,4 +81,10 @@ class Seat
     {
         $this->cards = [];
     }
+
+    public function buyChips(float $amount): void
+    {
+        $this->player->getBankroll()->remove($amount);
+        $this->pot->add($amount);
+    }
 }

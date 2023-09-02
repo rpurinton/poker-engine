@@ -69,16 +69,19 @@ class Table
         $this->config['bigBlind'] = $bigBlind;
     }
 
-    public function seatPlayer(Player $player, Seat $seat): void
+    public function seatPlayer(Player $player, Seat $seat): Seat
     {
         $seat->setPlayer($player);
         $seat->setStatus(SeatStatus::WAITING);
         $player->setStatus(PlayerStatus::SEATED);
+        return $seat;
     }
 
-    public function reserveSeat(Player $player, Seat $seat): void
+    public function reserveSeat(Player $player, Seat $seat): Seat
     {
         $seat->setPlayer($player);
         $seat->setStatus(SeatStatus::RESERVED);
+        $player->setStatus(PlayerStatus::SEAT_RESERVED);
+        return $seat;
     }
 }
