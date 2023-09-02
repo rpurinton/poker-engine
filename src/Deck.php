@@ -4,42 +4,51 @@ namespace RPurinton\poker;
 
 require_once 'Card.php';
 
-use RPurinton\poker\Card;
-
 class Deck
 {
-    private array $cards = [];
+    private $cards = [];
 
     public function __construct()
     {
-        foreach (Suit::values() as $suit) {
-            foreach (Rank::values() as $rank) {
-                $this->cards[] = new Card($suit, $rank);
-            }
-        }
+        $this->cards = $this->createDeck();
     }
 
-    public function shuffle(): void
+    public function getCards()
+    {
+        return $this->cards;
+    }
+
+    public function shuffle()
     {
         shuffle($this->cards);
     }
 
-    public function deal(): Card
+    public function dealCard()
     {
         return array_pop($this->cards);
     }
 
-    public function __toString(): string
+    private function createDeck()
     {
-        $string = '';
-        foreach ($this->cards as $card) {
-            $string .= $card . "\n";
+        $cards = [];
+
+        foreach (Suit::toArray() as $suit) {
+            foreach (Rank::toArray() as $rank) {
+                $cards[] = new Card($suit, $rank);
+            }
         }
-        return $string;
+
+        return $cards;
     }
 
-    public function __toArray(): array
+    public function __toString()
     {
-        return $this->cards;
+        $deck = '';
+
+        foreach ($this->cards as $card) {
+            $deck .= $card . ' ';
+        }
+
+        return $deck;
     }
 }
