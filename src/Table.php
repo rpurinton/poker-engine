@@ -2,14 +2,16 @@
 
 namespace RPurinton\poker;
 
+require_once(__DIR__ . '/TableStatus.php');
 require_once(__DIR__ . '/GameType.php');
 require_once(__DIR__ . '/Seat.php');
 
 class Table
 {
     private int $id = 0;
+    private TableStatus $status = TableStatus::WAITING_FOR_PLAYERS;
     private ?GameType $gameType = null;
-    private array $seats = [];
+    public array $seats = [];
     private array $config = [
         "seats" => 9,
         "smallBlind" => 1,
