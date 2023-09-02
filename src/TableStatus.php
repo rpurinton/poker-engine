@@ -2,8 +2,14 @@
 
 namespace RPurinton\poker;
 
-enum TableStatus
+enum TableStatus: int
 {
-    case WAITING_FOR_PLAYERS;
-    case IN_PROGRESS;
+    case WAITING_FOR_PLAYERS = 0;
+    case STARTING = 1;
+    case PREFLOP = 2;
+    case FLOP = 3;
+    case TURN = 4;
+    case RIVER = 5;
+    case SHOWDOWN = 6;
+    case HAND_OVER = 7;
 }

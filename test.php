@@ -6,11 +6,14 @@ namespace RPurinton\poker;
 
 require_once('src/Casino.php');
 $casino = new Casino("My Casino");
-$table = $casino->addTable(new Table(["id" => 1, "name" => "My Table", "gametype" => GameType::TEXAS_HOLDEM, "seats" => 9]));
+$table = $casino->addTable(new Table([
+    "id" => 1,
+    "name" => "My Table",
+]));
 $player1 = $casino->addPlayer(new Player("Bob"));
 $casino->buyChips($player1, 10000);
 $table->seatPlayer($player1, $table->seats[0])->buyChips(1000);
 $player2 = $casino->addPlayer(new Player("Sally"));
 $casino->buyChips($player2, 10000);
 $table->seatPlayer($player2, $table->seats[1])->buyChips(1000);
-print_r($table);
+$table->new_hand();
