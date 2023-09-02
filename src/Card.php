@@ -8,6 +8,16 @@ enum Suit: string
     case DIAMONDS = 'diamonds';
     case HEARTS = 'hearts';
     case SPADES = 'spades';
+
+    public static function values(): array
+    {
+        return [
+            self::CLUBS,
+            self::DIAMONDS,
+            self::HEARTS,
+            self::SPADES,
+        ];
+    }
 }
 
 enum Rank: int
@@ -25,6 +35,25 @@ enum Rank: int
     case QUEEN = 12;
     case KING = 13;
     case ACE = 14;
+
+    public static function values(): array
+    {
+        return [
+            self::TWO,
+            self::THREE,
+            self::FOUR,
+            self::FIVE,
+            self::SIX,
+            self::SEVEN,
+            self::EIGHT,
+            self::NINE,
+            self::TEN,
+            self::JACK,
+            self::QUEEN,
+            self::KING,
+            self::ACE,
+        ];
+    }
 }
 
 class Card
