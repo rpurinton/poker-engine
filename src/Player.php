@@ -29,6 +29,11 @@ class Player
         $this->bankroll = $bankroll;
     }
 
+    public function setStatus(PlayerStatus $status): void
+    {
+        $this->status = $status;
+    }
+
     public function __toString(): string
     {
         return $this->name;

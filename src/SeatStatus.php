@@ -7,5 +7,7 @@ enum SeatStatus
     case EMPTY;
     case RESERVED;
     case WAITING;
-    case OCCUPIED;
+    case PLAYING;
+    case SITOUT;
+    case TIMEOUT;
 }
