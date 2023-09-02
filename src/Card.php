@@ -25,6 +25,6 @@ class Card
 
     public function __toString(): string
     {
-        return $this->rank . $this->suit;
+        return $this->rank->display() . $this->suit->display();
     }
 }

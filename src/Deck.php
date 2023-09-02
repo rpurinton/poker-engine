@@ -41,7 +41,7 @@ class Deck
         return $cards;
     }
 
-    public function __toString()
+    public function toString()
     {
         $deck = '';
 
