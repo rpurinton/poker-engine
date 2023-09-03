@@ -4,7 +4,7 @@ namespace RPurinton\poker;
 
 class Pot
 {
-    private array $eligible = [];
+    public array $eligible = [];
 
     public function __construct(private float $amount = 0, public bool $good = true)
     {

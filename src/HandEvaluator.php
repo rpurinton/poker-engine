@@ -160,6 +160,7 @@ class HandEvaluator
     private function straight_flush_toString(array $holeCards, array $communityCards): string
     {
         $combos = $this->get_combos_texas($holeCards, $communityCards);
+        $possible = [];
         foreach ($combos as $combo) {
             if (count($combo) != 5) continue;
             usort($combo, function ($a, $b) {
@@ -189,8 +190,24 @@ class HandEvaluator
             if (strpos($straight_string, "89TJQ") !== false) $straight = "Queen High ";
             if (strpos($straight_string, "9TJQK") !== false) $straight = "King High ";
             if (strpos($straight_string, "TJQKA") !== false) $straight = "Royal ";
-            if ($flush && $straight) return $straight . "Straight Flush" . $flush . " [" . implode("] [", $combo) . "]";
+            if ($flush && $straight) {
+                $possible[] = ["hand" => $combo, "card" => $straight, "flush" => $flush, "kicker_rank" => $combo[4]->getRank()->numeric(), "kicker" => $combo[4]->getRank()->display_long()];
+            }
         }
+        if (count($possible) === 1) return $possible[0]["card"] . " Straight Flush" . $possible[0]["flush"] . " [" . implode("] [", $possible[0]["hand"]) . "]";
+        $best_hand_index = $this->get_best_straight_flush($possible);
+        return $possible[$best_hand_index]["card"] . " Straight Flush" . $possible[$best_hand_index]["flush"] . " [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+    }
+
+    private function get_best_straight_flush(array $possible): int
+    {
+        $best_hand_index = 0;
+        $last_kicker_value = 0;
+        // compare the kicker
+        for ($i = 1; $i < count($possible); $i++) {
+            if ($possible[$i]["kicker_rank"] > $last_kicker_value) $best_hand_index = $i;
+        }
+        return $best_hand_index;
     }
 
     private function is_four_of_a_kind(array $holeCards, array $communityCards): bool
@@ -231,12 +248,20 @@ class HandEvaluator
                 $possible[] = ["hand" => $combo, "card" => $combo[1]->getRank()->display_long(), "kicker_rank" => $combo[4]->getRank()->numeric(), "kicker" => $combo[0]->getRank()->display_long()];
             }
         }
+        if (count($possible) === 1) return "Four-of-a-Kind " . $possible[0]["card"] . "s [" . implode("] [", $possible[0]["hand"]) . "]";
+        $best_hand_index = $this->get_best_four_of_a_kind($possible);
+        return "Four-of-a-Kind " . $possible[$best_hand_index]["card"] . "s [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+    }
+
+    private function get_best_four_of_a_kind(array $possible): int
+    {
         $best_hand_index = 0;
+        $last_kicker_value = 0;
         // compare the kicker
         for ($i = 1; $i < count($possible); $i++) {
-            if ($possible[$i]["kicker_rank"] > $possible[$best_hand_index]["kicker_rank"]) $best_hand_index = $i;
+            if ($possible[$i]["kicker_rank"] > $last_kicker_value) $best_hand_index = $i;
         }
-        return "Four-of-a-Kind " . $possible[$best_hand_index]["card"] . "s [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+        return $best_hand_index;
     }
 
     private function is_full_house(array $holeCards, array $communityCards): bool
@@ -280,6 +305,13 @@ class HandEvaluator
                 $possible[] = ["hand" => $combo, "card1_value" => $combo[2]->getRank()->numeric(), "card" => $combo[2]->getRank()->display_long(), "kicker_rank" => $combo[0]->getRank()->numeric(), "kicker" => $combo[0]->getRank()->display_long()];
             }
         }
+        if (count($possible) === 1) return $possible[0]["card"] . "s full of " . $possible[0]["kicker"] . "s [" . implode("] [", $possible[0]["hand"]) . "]";
+        $best_hand_index = $this->get_best_full_house($possible);
+        return $possible[$best_hand_index]["card"] . "s full of " . $possible[$best_hand_index]["kicker"] . "s [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+    }
+
+    private function get_best_full_house(array $possible): int
+    {
         $best_hand_index = 0;
         $last_card1_value = 0;
         $last_kicker_value = 0;
@@ -296,7 +328,7 @@ class HandEvaluator
                 $last_kicker_value = $possible[$i]["kicker_rank"];
             }
         }
-        return $possible[$best_hand_index]["card"] . "s full of " . $possible[$best_hand_index]["kicker"] . "s [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+        return $best_hand_index;
     }
 
     private function is_flush(array $holeCards, array $communityCards): bool
@@ -333,6 +365,13 @@ class HandEvaluator
                 $possible[] = ["hand" => $combo, "suit" => $combo[0]->getSuit()->display_long(), "kicker_ranks" => [$combo[4]->getRank()->numeric(), $combo[3]->getRank()->numeric(), $combo[2]->getRank()->numeric(), $combo[1]->getRank()->numeric(), $combo[0]->getRank()->numeric()], "kickers" => [$combo[4]->getRank()->display_long(), $combo[3]->getRank()->display_long(), $combo[2]->getRank()->display_long(), $combo[1]->getRank()->display_long(), $combo[0]->getRank()->display_long()]];
             }
         }
+        if (count($possible) === 1) return $possible[0]["kickers"][0] . " High " . $possible[0]["suit"] . " Flush [" . implode("] [", $possible[0]["hand"]) . "]";
+        $best_hand_index = $this->get_best_flush($possible);
+        return $possible[$best_hand_index]["kickers"][0] . " High " . $possible[$best_hand_index]["suit"] . " Flush [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+    }
+
+    private function get_best_flush(array $possible): int
+    {
         // compare the kickers
         $best_hand_index = 0;
         $last_kicker1_value = 0;
@@ -382,7 +421,7 @@ class HandEvaluator
                 $last_kicker5_value = $possible[$i]["kicker_ranks"][4];
             }
         }
-        return $possible[$best_hand_index]["kickers"][0] . " High " . $possible[$best_hand_index]["suit"] . " Flush [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+        return $best_hand_index;
     }
 
     private function is_straight(array $holeCards, array $communityCards): bool
@@ -457,13 +496,19 @@ class HandEvaluator
                 $possible[] = ["hand" => $combo, "card" => "Ace", "kicker_rank" => $combo[4]->getRank()->numeric(), "kicker" => $combo[4]->getRank()->display_long()];
             }
         }
+        if (count($possible) === 1) return $possible[0]["card"] . " High Straight [" . implode("] [", $possible[0]["hand"]) . "]";
+        $best_hand_index = $this->get_best_straight($possible);
+        return $possible[$best_hand_index]["card"] . " High Straight [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+    }
 
+    private function get_best_straight(array $possible): int
+    {
         $best_hand_index = 0;
         // compare the high card
         for ($i = 1; $i < count($possible); $i++) {
             if ($possible[$i]["kicker_rank"] > $possible[$best_hand_index]["kicker_rank"]) $best_hand_index = $i;
         }
-        return $possible[$best_hand_index]["card"] . " High Straight [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+        return $best_hand_index;
     }
 
     private function is_three_of_a_kind(array $holeCards, array $communityCards): bool
@@ -500,6 +545,13 @@ class HandEvaluator
                 $possible[] = ["hand" => $combo, "card" => $combo[2]->getRank()->display_long(), "kicker_ranks" => [$combo[1]->getRank()->numeric(), $combo[0]->getRank()->numeric()], "kickers" => [$combo[1]->getRank()->display_long(), $combo[0]->getRank()->display_long()]];
             }
         }
+        if (count($possible) === 1) return "Three-of-a-kind " . $possible[0]["card"] . "s [" . implode("] [", $possible[0]["hand"]) . "]";
+        $best_hand_index = $this->get_best_three_of_a_kind($possible);
+        return "Three-of-a-kind " . $possible[$best_hand_index]["card"] . "s [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+    }
+
+    private function get_best_three_of_a_kind(array $possible): int
+    {
         $best_hand_index = 0;
         $last_kicker1_value = 0;
         $last_kicker2_value = 0;
@@ -516,7 +568,7 @@ class HandEvaluator
                 $last_kicker2_value = $possible[$i]["kicker_ranks"][1];
             }
         }
-        return "Three-of-a-kind " . $possible[$best_hand_index]["card"] . "s [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+        return $best_hand_index;
     }
 
     private function is_two_pair(array $holeCards, array $communityCards): bool
@@ -564,7 +616,13 @@ class HandEvaluator
                 }
             }
         }
+        if (count($possible) === 1) return "Two Pair " . $possible[0]["card1"] . "s over " . $possible[0]["card2"] . "s [" . implode("] [", $possible[0]["hand"]) . "]";
+        $best_hand_index = $this->get_best_two_pair($possible);
+        return "Two Pair " . $possible[$best_hand_index]["card1"] . "s over " . $possible[$best_hand_index]["card2"] . "s [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+    }
 
+    private function get_best_two_pair(array $possible): int
+    {
         $best_hand_index = 0;
         $last_card1_value = 0;
         $last_card2_value = 0;
@@ -588,7 +646,7 @@ class HandEvaluator
                 $last_kicker_value = $possible[$i]["kicker_rank"];
             }
         }
-        return "Two Pair " . $possible[$best_hand_index]["card1"] . "s over " . $possible[$best_hand_index]["card2"] . "s [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+        return $best_hand_index;
     }
 
     private function is_pair(array $holeCards, array $communityCards): bool
@@ -630,6 +688,13 @@ class HandEvaluator
                 $possible[] = ["hand" => $combo, "card_value" => $combo[3]->getRank()->numeric(), "card" => $combo[3]->getRank()->display_long(), "kicker_ranks" => [$combo[2]->getRank()->numeric(), $combo[1]->getRank()->numeric(), $combo[0]->getRank()->numeric()], "kickers" => [$combo[2]->getRank()->display_long(), $combo[1]->getRank()->display_long(), $combo[0]->getRank()->display_long()]];
             }
         }
+        if (count($possible) === 1) return "Pair of " . $possible[0]["card"] . "s [" . implode("] [", $possible[0]["hand"]) . "]";
+        $best_hand_index = $this->get_best_pair($possible);
+        return "Pair of " . $possible[$best_hand_index]["card"] . "s [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+    }
+
+    private function get_best_pair(array $possible): int
+    {
         $best_hand_index = 0;
         $last_card_value = 0;
         $last_kicker1_value = 0;
@@ -663,7 +728,7 @@ class HandEvaluator
                 $last_kicker3_value = $possible[$i]["kicker_ranks"][2];
             }
         }
-        return "Pair of " . $possible[$best_hand_index]["card"] . "s [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+        return $best_hand_index;
     }
 
     private function is_high_card(array $holeCards, array $communityCards): bool
@@ -682,6 +747,13 @@ class HandEvaluator
             if (count($combo) == 5) $possible[] = ["hand" => $combo, "card1_value" => $combo[4]->getRank()->numeric(), "card1" => $combo[4]->getRank()->display_long(), "card2_value" => $combo[3]->getRank()->numeric(), "card2" => $combo[3]->getRank()->display_long(), "card3_value" => $combo[2]->getRank()->numeric(), "card3" => $combo[2]->getRank()->display_long(), "card4_value" => $combo[1]->getRank()->numeric(), "card4" => $combo[1]->getRank()->display_long(), "card5_value" => $combo[0]->getRank()->numeric(), "card5" => $combo[0]->getRank()->display_long()];
             else $possible[] = ["hand" => $combo, "card1_value" => $combo[1]->getRank()->numeric(), "card1" => $combo[1]->getRank()->display_long(), "card2_value" => $combo[0]->getRank()->numeric(), "card2" => $combo[0]->getRank()->display_long()];
         }
+        if (count($possible) === 1) return $possible[0]["card1"] . " High [" . implode("] [", $possible[0]["hand"]) . "]";
+        $best_hand_index = $this->get_best_high_card($possible);
+        return $possible[$best_hand_index]["card1"] . " High [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+    }
+
+    private function get_best_high_card(array $possible): int
+    {
         $best_hand_index = 0;
         $last_card1_value = 0;
         $last_card2_value = 0;
@@ -727,9 +799,133 @@ class HandEvaluator
                 $last_card5_value = $possible[$i]["card5_value"];
             }
         }
-        return $possible[$best_hand_index]["card1"] . " High [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
+        return $best_hand_index;
     }
 
+    public function get_winner_indexes(array $hands, array $communityCards): array
+    {
+        if (count($hands) == 1) foreach ($hands as $index => $value) return [$index];
+        $last_hand_value = 0;
+        foreach ($hands as $index => $hand) {
+            $hand_value = match (true) {
+                $this->is_royal_flush($hand, $communityCards) => 10,
+                $this->is_straight_flush($hand, $communityCards) => 9,
+                $this->is_four_of_a_kind($hand, $communityCards) => 8,
+                $this->is_full_house($hand, $communityCards) => 7,
+                $this->is_flush($hand, $communityCards) => 6,
+                $this->is_straight($hand, $communityCards) => 5,
+                $this->is_three_of_a_kind($hand, $communityCards) => 4,
+                $this->is_two_pair($hand, $communityCards) => 3,
+                $this->is_pair($hand, $communityCards) => 2,
+                $this->is_high_card($hand, $communityCards) => 1,
+                default => 0,
+            };
+            if ($hand_value < $last_hand_value) unset($hands[$index]);
+            else if ($hand_value >= $last_hand_value) {
+                $last_hand_value = $hand_value;
+            }
+        }
+        foreach ($hands as $index => $hand) {
+            $hand_value = match (true) {
+                $this->is_royal_flush($hand, $communityCards) => 10,
+                $this->is_straight_flush($hand, $communityCards) => 9,
+                $this->is_four_of_a_kind($hand, $communityCards) => 8,
+                $this->is_full_house($hand, $communityCards) => 7,
+                $this->is_flush($hand, $communityCards) => 6,
+                $this->is_straight($hand, $communityCards) => 5,
+                $this->is_three_of_a_kind($hand, $communityCards) => 4,
+                $this->is_two_pair($hand, $communityCards) => 3,
+                $this->is_pair($hand, $communityCards) => 2,
+                $this->is_high_card($hand, $communityCards) => 1,
+                default => 0,
+            };
+            if ($hand_value < $last_hand_value) unset($hands[$index]);
+            else if ($hand_value >= $last_hand_value) {
+                $last_hand_value = $hand_value;
+            }
+        }
+        if (count($hands) == 1) foreach ($hands as $index => $value) return [$index];
+        // try to break ties
+        switch ($last_hand_value) {
+            case 10:
+                return $this->tie_break_royal_flush($hands, $communityCards);
+            case 9:
+                return $this->tie_break_straight_flush($hands, $communityCards);
+            case 8:
+                return $this->tie_break_four_of_a_kind($hands, $communityCards);
+            case 7:
+                return $this->tie_break_full_house($hands, $communityCards);
+            case 6:
+                return $this->tie_break_flush($hands, $communityCards);
+            case 5:
+                return $this->tie_break_straight($hands, $communityCards);
+            case 4:
+                return $this->tie_break_three_of_a_kind($hands, $communityCards);
+            case 3:
+                return $this->tie_break_two_pair($hands, $communityCards);
+            case 2:
+                return $this->tie_break_pair($hands, $communityCards);
+            case 1:
+                return $this->tie_break_high_card($hands, $communityCards);
+            default:
+                return [];
+        }
+    }
+
+    private function tie_break_royal_flush(array $hands, array $communityCards): array
+    {
+        // can't tie break a royal, so return all indexes
+        $indexes = [];
+        foreach ($hands as $index => $hand) {
+            $indexes[] = $index;
+        }
+        return $indexes;
+    }
+
+    private function tie_break_straight_flush(array $hands, array $communityCards): array
+    {
+        return [];
+    }
+
+    private function tie_break_four_of_a_kind(array $hands, array $communityCards): array
+    {
+        return [];
+    }
+
+    private function tie_break_full_house(array $hands, array $communityCards): array
+    {
+        return [];
+    }
+
+    private function tie_break_flush(array $hands, array $communityCards): array
+    {
+        return [];
+    }
+
+    private function tie_break_straight(array $hands, array $communityCards): array
+    {
+        return [];
+    }
+
+    private function tie_break_three_of_a_kind(array $hands, array $communityCards): array
+    {
+        return [];
+    }
+
+    private function tie_break_two_pair(array $hands, array $communityCards): array
+    {
+        return [];
+    }
+
+    private function tie_break_pair(array $hands, array $communityCards): array
+    {
+        return [];
+    }
+
+    private function tie_break_high_card(array $hands, array $communityCards): array
+    {
+        return [];
+    }
 
     private function get_combos_texas(array $holeCards, array $communityCards): array
     {
