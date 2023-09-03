@@ -101,7 +101,7 @@ class Table
 
     public function new_hand(): void
     {
-        $this->chat("=============================================================");
+        echo ("=============================================================\n");
         $this->chat("Starting a new hand of " . $this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $players_ready = $this->resetSeats();
@@ -127,21 +127,21 @@ class Table
         $this->deck->dealCard($this->communityCards);
         $this->deck->dealCard($this->communityCards);
         $this->deck->dealCard($this->communityCards);
-        $this->chat("========================================");
+        echo ("========================================\n");
         $this->chat("Flop:\t[" . implode("] [", $this->communityCards) . "]");
         $this->bettingRound();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::TURN;
         $this->deck->dealCard($this->muck);
         $this->deck->dealCard($this->communityCards);
-        $this->chat("========================================");
+        echo ("========================================\n");
         $this->chat("Turn:\t[" . implode("] [", $this->communityCards) . "]");
         $this->bettingRound();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::RIVER;
         $this->deck->dealCard($this->muck);
         $this->deck->dealCard($this->communityCards);
-        $this->chat("========================================");
+        echo ("========================================\n");
         $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
         $this->action_position = $this->button_position;
         $this->bettingRound();

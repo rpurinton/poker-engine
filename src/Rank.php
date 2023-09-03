@@ -37,6 +37,25 @@ enum Rank: int
         };
     }
 
+    public function numeric(): int
+    {
+        return match ($this) {
+            self::TWO => 2,
+            self::THREE => 3,
+            self::FOUR => 4,
+            self::FIVE => 5,
+            self::SIX => 6,
+            self::SEVEN => 7,
+            self::EIGHT => 8,
+            self::NINE => 9,
+            self::TEN => 10,
+            self::JACK => 11,
+            self::QUEEN => 12,
+            self::KING => 13,
+            self::ACE => 14,
+        };
+    }
+
     public static function toArray(): iterable
     {
         return [
