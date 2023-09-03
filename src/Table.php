@@ -120,6 +120,29 @@ class Table
         $this->dealHoleCards();
         $this->config['status'] = TableStatus::PREFLOP;
         $this->bettingRound();
+        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        $this->config['status'] = TableStatus::FLOP;
+        $this->deck->dealCard($this->muck);
+        $this->deck->dealCard($this->communityCards);
+        $this->deck->dealCard($this->communityCards);
+        $this->deck->dealCard($this->communityCards);
+        $this->chat("The flop is [" . implode("] [", $this->communityCards) . "]");
+        $this->bettingRound();
+        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        $this->config['status'] = TableStatus::TURN;
+        $this->deck->dealCard($this->muck);
+        $this->deck->dealCard($this->communityCards);
+        $this->chat("The turn is [" . $this->communityCards[3] . "]");
+        $this->bettingRound();
+        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        $this->config['status'] = TableStatus::RIVER;
+        $this->deck->dealCard($this->muck);
+        $this->deck->dealCard($this->communityCards);
+        $this->chat("The river is [" . $this->communityCards[4] . "]");
+        $this->bettingRound();
+        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        $this->config['status'] = TableStatus::SHOWDOWN;
+        //$this->showdown();
     }
 
     private function bettingRound(): void

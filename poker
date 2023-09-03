@@ -3,30 +3,6 @@
 
 namespace RPurinton\poker;
 
-enum TableStatus: int
-{
-    case WAITING_FOR_PLAYERS = 0;
-    case STARTING = 1;
-    case PREFLOP = 2;
-    case FLOP = 3;
-    case TURN = 4;
-    case RIVER = 5;
-    case SHOWDOWN = 6;
-    case HAND_OVER = 7;
-    public function display(): string
-    {
-        return match ($this) {
-            TableStatus::WAITING_FOR_PLAYERS => 'Waiting for players',
-            TableStatus::STARTING => 'Starting',
-            TableStatus::PREFLOP => 'Pre-flop',
-            TableStatus::FLOP => 'Flop',
-            TableStatus::TURN => 'Turn',
-            TableStatus::RIVER => 'River',
-            TableStatus::SHOWDOWN => 'Showdown',
-            TableStatus::HAND_OVER => 'Hand over',
-        };
-    }
-}
 class Card
 {
     public function __construct(
@@ -106,142 +82,6 @@ class Casino
         $player->getBankroll()->remove($amount);
     }
 }
-class Seat
-{
-    private SeatStatus $status = SeatStatus::EMPTY;
-    private ?Player $player = null;
-    public array $cards = [];
-    private Pot $stack;
-    public function __construct()
-    {
-        $this->stack = new Pot(0);
-    }
-    public function getStatus(): SeatStatus
-    {
-        return $this->status;
-    }
-    public function setStatus(SeatStatus $status): void
-    {
-        $this->status = $status;
-    }
-    public function getPlayer(): ?Player
-    {
-        return $this->player;
-    }
-    public function setPlayer(Player $player): void
-    {
-        $this->player = $player;
-    }
-    public function getStack(): Pot
-    {
-        return $this->stack;
-    }
-    public function __toString(): string
-    {
-        return $this->player->getName();
-    }
-    public function clearCards(): void
-    {
-        $this->cards = [];
-    }
-    public function buyChips(float $amount): void
-    {
-        $amount = min($amount, $this->player->getBankroll()->getAmount());
-        $this->player->getBankroll()->remove($amount);
-        $this->stack->add($amount);
-    }
-    public function topUp(float $amount): void
-    {
-        $current_stack = $this->stack->getAmount();
-        if ($current_stack < $amount) {
-            $this->buyChips($amount - $current_stack);
-        }
-    }
-    public function prompt(Table $table): void
-    {
-        switch ($this->player->type) {
-            case PlayerType::HUMAN:
-                echo ($this->player->getName() . "'s cards: [" . implode(', ', $this->cards) . "]\n");
-                break;
-            case PlayerType::BOT:
-                echo ($this->player->getName() . "'s cards: [" . implode(', ', $this->cards) . "]\n");
-                break;
-        }
-    }
-}
-enum PlayerStatus
-{
-    case STANDING;
-    case WAITING_FOR_TABLE;
-    case SEAT_RESERVED;
-    case SEATED;
-}
-enum Suit
-{
-    case CLUBS;
-    case DIAMONDS;
-    case HEARTS;
-    case SPADES;
-    public function display(): string
-    {
-        return match ($this) {
-            Suit::CLUBS => 'c',
-            Suit::DIAMONDS => 'd',
-            Suit::HEARTS => 'h',
-            Suit::SPADES => 's',
-        };
-    }
-    public static function toArray(): array
-    {
-        return [
-            Suit::CLUBS,
-            Suit::DIAMONDS,
-            Suit::HEARTS,
-            Suit::SPADES,
-        ];
-    }
-}
-enum PlayerType
-{
-    case HUMAN;
-    case BOT;
-}
-enum SeatStatus
-{
-    case EMPTY;
-    case RESERVED;
-    case WAITING;
-    case POSTED;
-    case PLAYING;
-    case SITOUT;
-    case TIMEOUT;
-    case FOLDED;
-}
-class HandEvaluator
-{
-}
-enum Limit
-{
-    case NL;
-    case PL;
-    case FL;
-    public function display(): string
-    {
-        return match ($this) {
-            Limit::NL => 'NL',
-            Limit::PL => 'PL',
-            Limit::FL => 'FL',
-        };
-    }
-    public static function toArray(): array
-    {
-        return [
-            Limit::NL,
-            Limit::PL,
-            Limit::FL,
-        ];
-    }
-}
 class Deck
 {
     private $cards = [];
@@ -287,6 +127,95 @@ class Deck
         }
         return $deck;
     }
+}
+enum GameType: int
+{
+    case TEXAS_HOLDEM = 1;
+    case OMAHA = 2;
+    case OMAHA_HILO = 3;
+    public function display()
+    {
+        return match ($this) {
+            GameType::TEXAS_HOLDEM => 'Texas Hold \'Em',
+            GameType::OMAHA => 'Omaha',
+            GameType::OMAHA_HILO => 'Omaha Hi/Lo',
+        };
+    }
+    public function num_hole_cards()
+    {
+        return match ($this) {
+            GameType::TEXAS_HOLDEM => 2,
+            GameType::OMAHA, GameType::OMAHA_HILO => 4,
+        };
+    }
+}
+class HandEvaluator
+{
+}
+enum Limit
+{
+    case NL;
+    case PL;
+    case FL;
+    public function display(): string
+    {
+        return match ($this) {
+            Limit::NL => 'No Limit',
+            Limit::PL => 'Pot Limit',
+            Limit::FL => 'Fixed Limit',
+        };
+    }
+    public static function toArray(): array
+    {
+        return [
+            Limit::NL,
+            Limit::PL,
+            Limit::FL,
+        ];
+    }
+}
+class Player
+{
+    private PlayerStatus $status = PlayerStatus::STANDING;
+    private ?Pot $bankroll;
+    public function __construct(
+        private string $name,
+        public PlayerType $type = PlayerType::HUMAN
+    ) {
+        $this->bankroll = new Pot(0);
+    }
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    public function getBankroll(): Pot
+    {
+        return $this->bankroll;
+    }
+    public function setBankroll(Pot $bankroll): void
+    {
+        $this->bankroll = $bankroll;
+    }
+    public function setStatus(PlayerStatus $status): void
+    {
+        $this->status = $status;
+    }
+    public function __toString(): string
+    {
+        return $this->name;
+    }
+}
+enum PlayerStatus
+{
+    case STANDING;
+    case WAITING_FOR_TABLE;
+    case SEAT_RESERVED;
+    case SEATED;
+}
+enum PlayerType
+{
+    case HUMAN;
+    case BOT;
 }
 class Pot
 {
@@ -374,25 +303,103 @@ enum Rank: int
         ];
     }
 }
-enum GameType: int
+class Seat
 {
-    case TEXAS_HOLDEM = 1;
-    case OMAHA = 2;
-    case OMAHA_HILO = 3;
-    public function display()
+    private SeatStatus $status = SeatStatus::EMPTY;
+    private ?Player $player = null;
+    public array $cards = [];
+    private Pot $stack;
+    public function __construct()
+    {
+        $this->stack = new Pot(0);
+    }
+    public function getStatus(): SeatStatus
+    {
+        return $this->status;
+    }
+    public function setStatus(SeatStatus $status): void
+    {
+        $this->status = $status;
+    }
+    public function getPlayer(): ?Player
+    {
+        return $this->player;
+    }
+    public function setPlayer(Player $player): void
+    {
+        $this->player = $player;
+    }
+    public function getStack(): Pot
+    {
+        return $this->stack;
+    }
+    public function __toString(): string
+    {
+        return $this->player->getName();
+    }
+    public function clearCards(): void
+    {
+        $this->cards = [];
+    }
+    public function buyChips(float $amount): void
+    {
+        $amount = min($amount, $this->player->getBankroll()->getAmount());
+        $this->player->getBankroll()->remove($amount);
+        $this->stack->add($amount);
+    }
+    public function topUp(float $amount): void
+    {
+        $current_stack = $this->stack->getAmount();
+        if ($current_stack < $amount) {
+            $this->buyChips($amount - $current_stack);
+        }
+    }
+    public function prompt(Table $table): void
+    {
+        switch ($this->player->type) {
+            case PlayerType::HUMAN:
+                echo ($this->player->getName() . "'s cards: [" . implode('] [', $this->cards) . "]\n");
+                break;
+            case PlayerType::BOT:
+                echo ($this->player->getName() . "'s cards: [" . implode('] [', $this->cards) . "]\n");
+                break;
+        }
+    }
+}
+enum SeatStatus
+{
+    case EMPTY;
+    case RESERVED;
+    case WAITING;
+    case POSTED;
+    case PLAYING;
+    case SITOUT;
+    case TIMEOUT;
+    case FOLDED;
+}
+enum Suit
+{
+    case CLUBS;
+    case DIAMONDS;
+    case HEARTS;
+    case SPADES;
+    public function display(): string
     {
         return match ($this) {
-            GameType::TEXAS_HOLDEM => 'Texas Hold \'Em',
-            GameType::OMAHA => 'Omaha',
-            GameType::OMAHA_HILO => 'Omaha Hi/Lo',
+            Suit::CLUBS => 'c',
+            Suit::DIAMONDS => 'd',
+            Suit::HEARTS => 'h',
+            Suit::SPADES => 's',
         };
     }
-    public function num_hole_cards()
+    public static function toArray(): array
     {
-        return match ($this) {
-            GameType::TEXAS_HOLDEM => 2,
-            GameType::OMAHA, GameType::OMAHA_HILO => 4,
-        };
+        return [
+            Suit::CLUBS,
+            Suit::DIAMONDS,
+            Suit::HEARTS,
+            Suit::SPADES,
+        ];
     }
 }
 class Table
@@ -495,7 +502,29 @@ class Table
         $this->dealHoleCards();
         $this->config['status'] = TableStatus::PREFLOP;
         $this->bettingRound();
-    }
+        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        $this->config['status'] = TableStatus::FLOP;
+        $this->deck->dealCard($this->muck);
+        $this->deck->dealCard($this->communityCards);
+        $this->deck->dealCard($this->communityCards);
+        $this->deck->dealCard($this->communityCards);
+        $this->chat("The flop is [" . implode("] [", $this->communityCards) . "]");
+        $this->bettingRound();
+        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        $this->config['status'] = TableStatus::TURN;
+        $this->deck->dealCard($this->muck);
+        $this->deck->dealCard($this->communityCards);
+        $this->chat("The turn is [" . $this->communityCards[3] . "]");
+        $this->bettingRound();
+        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        $this->config['status'] = TableStatus::RIVER;
+        $this->deck->dealCard($this->muck);
+        $this->deck->dealCard($this->communityCards);
+        $this->chat("The river is [" . $this->communityCards[4] . "]");
+        $this->bettingRound();
+        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        $this->config['status'] = TableStatus::SHOWDOWN;
+            }
     private function bettingRound(): void
     {
         while (!$this->potsGood()) {
@@ -627,37 +656,32 @@ class Table
         echo ($message . "\n");
     }
 }
-class Player
+enum TableStatus: int
 {
-    private PlayerStatus $status = PlayerStatus::STANDING;
-    private ?Pot $bankroll;
-    public function __construct(
-        private string $name,
-        public PlayerType $type = PlayerType::HUMAN
-    ) {
-        $this->bankroll = new Pot(0);
-    }
-    public function getName(): string
+    case WAITING_FOR_PLAYERS = 0;
+    case STARTING = 1;
+    case PREFLOP = 2;
+    case FLOP = 3;
+    case TURN = 4;
+    case RIVER = 5;
+    case SHOWDOWN = 6;
+    case HAND_OVER = 7;
+    public function display(): string
     {
-        return $this->name;
-    }
-    public function getBankroll(): Pot
-    {
-        return $this->bankroll;
-    }
-    public function setBankroll(Pot $bankroll): void
-    {
-        $this->bankroll = $bankroll;
-    }
-    public function setStatus(PlayerStatus $status): void
-    {
-        $this->status = $status;
-    }
-    public function __toString(): string
-    {
-        return $this->name;
+        return match ($this) {
+            TableStatus::WAITING_FOR_PLAYERS => 'Waiting for players',
+            TableStatus::STARTING => 'Starting',
+            TableStatus::PREFLOP => 'Pre-flop',
+            TableStatus::FLOP => 'Flop',
+            TableStatus::TURN => 'Turn',
+            TableStatus::RIVER => 'River',
+            TableStatus::SHOWDOWN => 'Showdown',
+            TableStatus::HAND_OVER => 'Hand over',
+        };
     }
 }
+$build_info = json_decode(file_get_contents('build_info.json'), true);
+echo ("poker (cli) v" . $build_info["number"] . " (built: " . $build_info["date"] . ")\n");
 $casino = new Casino("My Casino");
 $table = $casino->addTable(new Table([
     "id" => 1,

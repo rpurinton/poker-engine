@@ -73,10 +73,10 @@ class Seat
     {
         switch ($this->player->type) {
             case PlayerType::HUMAN:
-                echo ($this->player->getName() . "'s cards: [" . implode(', ', $this->cards) . "]\n");
+                echo ($this->player->getName() . "'s cards: [" . implode('] [', $this->cards) . "]\n");
                 break;
             case PlayerType::BOT:
-                echo ($this->player->getName() . "'s cards: [" . implode(', ', $this->cards) . "]\n");
+                echo ($this->player->getName() . "'s cards: [" . implode('] [', $this->cards) . "]\n");
                 break;
         }
     }

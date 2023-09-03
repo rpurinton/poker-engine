@@ -4,6 +4,9 @@
 
 namespace RPurinton\poker;
 
+$build_info = json_decode(file_get_contents('build_info.json'), true);
+echo ("poker (cli) v" . $build_info["number"] . " (built: " . $build_info["date"] . ")\n");
+
 require_once('src/Casino.php');
 $casino = new Casino("My Casino");
 $table = $casino->addTable(new Table([

@@ -11,9 +11,9 @@ enum Limit
     public function display(): string
     {
         return match ($this) {
-            Limit::NL => 'NL',
-            Limit::PL => 'PL',
-            Limit::FL => 'FL',
+            Limit::NL => 'No Limit',
+            Limit::PL => 'Pot Limit',
+            Limit::FL => 'Fixed Limit',
         };
     }
 

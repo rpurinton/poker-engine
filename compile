@@ -1,11 +1,25 @@
 #!/usr/local/bin/php -f
 <?php
+echo ("Compiling poker...\n");
+echo ("Removing old poker...\n");
 @unlink(__DIR__ . '/poker');
 $contents = "";
-exec("find * | grep '.php'", $files);
+echo ("Loading Build Info...");
+$build_info = json_decode(file_get_contents(__DIR__ . '/build_info.json'), true);
+echo ("done.\n");
+$build_info["number"]++;
+$build_info["date"] = date("c");
+echo ("Build Number: " . $build_info["number"] . "\n");
+echo ("Build Date: " . $build_info["date"] . "\n");
+echo ("Saving Build Info...");
+file_put_contents(__DIR__ . '/build_info.json', json_encode($build_info));
+echo ("done.\n");
+echo ("Compiling src...\n");
+exec("find src/* | grep '.php'", $files);
 foreach ($files as $file) {
     $lines = file($file);
-    foreach ($lines as $line) {
+    foreach ($lines as $line_number => $line) {
+        echo ("\rCompiling $file line " . ($line_number + 1) . " of " . count($lines));
         if (strpos($line, 'namespace') !== false) continue;
         if (strpos($line, 'require_once') !== false) continue;
         if (strpos($line, '<?php') !== false) continue;
@@ -15,7 +29,9 @@ foreach ($files as $file) {
             $line = substr($line, 0, strpos($line, '//'));
         }
         if ($line != "\n") $contents .= $line;
+        echo ("\rCompiled $file (" . count($lines) . " lines)          ");
     }
+    echo ("\n");
 }
 $contents = "#!/usr/local/bin/php -f\n<?php\n\nnamespace RPurinton\poker;\n\n" . $contents;
 $lines = file(__DIR__ . '/main');
@@ -32,3 +48,4 @@ foreach ($lines as $line) {
 }
 file_put_contents(__DIR__ . '/poker', $contents);
 chmod(__DIR__ . '/poker', 0755);
+echo ("Compiled poker\n");
