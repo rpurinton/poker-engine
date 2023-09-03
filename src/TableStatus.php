@@ -12,4 +12,18 @@ enum TableStatus: int
     case RIVER = 5;
     case SHOWDOWN = 6;
     case HAND_OVER = 7;
+
+    public function display(): string
+    {
+        return match ($this) {
+            TableStatus::WAITING_FOR_PLAYERS => 'Waiting for players',
+            TableStatus::STARTING => 'Starting',
+            TableStatus::PREFLOP => 'Pre-flop',
+            TableStatus::FLOP => 'Flop',
+            TableStatus::TURN => 'Turn',
+            TableStatus::RIVER => 'River',
+            TableStatus::SHOWDOWN => 'Showdown',
+            TableStatus::HAND_OVER => 'Hand over',
+        };
+    }
 }

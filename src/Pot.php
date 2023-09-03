@@ -4,7 +4,9 @@ namespace RPurinton\poker;
 
 class Pot
 {
-    public function __construct(private float $amount = 0, public array $eligible = [])
+    private array $eligible = [];
+
+    public function __construct(private float $amount = 0, public bool $good = true)
     {
         $this->amount = round($this->amount, 2);
     }

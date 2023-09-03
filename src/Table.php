@@ -101,7 +101,7 @@ class Table
 
     public function new_hand(): void
     {
-        $this->chat("Starting a new hand of " . $this->config['gametype']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
+        $this->chat("Starting a new hand of " . $this->config["limit"]->display() . " " . $this->config['gametype']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $players_ready = $this->resetSeats();
         if ($players_ready < 2) {
@@ -111,13 +111,49 @@ class Table
         $this->muck = [];
         $this->communityCards = [];
         $this->pots = [];
-        $this->pots[0] = new Pot(0);
+        $this->pots[0] = new Pot(0, false);
         $this->advanceButton();
         $this->deck = new Deck();
-        $this->action_position = $this->getNextActiveSeat($this->postBlinds());
+        $this->action_position = $this->postBlinds();
         $this->deck->shuffle();
         $this->deck->cut();
         $this->dealHoleCards();
+        $this->config['status'] = TableStatus::PREFLOP;
+        $this->bettingRound();
+    }
+
+    private function bettingRound(): void
+    {
+        while (!$this->potsGood()) {
+            $action_order = $this->getActionOrder();
+            foreach ($action_order as $seat_number) {
+                $seat = $this->seats[$seat_number];
+                $seat->prompt($this);
+            }
+            $this->pots[0]->good = true;
+        }
+    }
+
+    private function potsGood(): bool
+    {
+        foreach ($this->pots as $pot) {
+            if (!$pot->good) return false;
+        }
+        return true;
+    }
+
+    private function getActionOrder(): array
+    {
+        $action_order = [];
+        $seat_number = $this->action_position;
+        while (true) {
+            $seat_number++;
+            if ($seat_number >= count($this->seats)) $seat_number = 0;
+            $seat = $this->seats[$seat_number];
+            if (in_array($seat->getStatus(), [SeatStatus::PLAYING, SeatStatus::POSTED])) $action_order[] = $seat_number;
+            if ($seat_number == $this->action_position) break;
+        }
+        return $action_order;
     }
 
     private function dealHoleCards(): void

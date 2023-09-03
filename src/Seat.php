@@ -5,6 +5,7 @@ namespace RPurinton\poker;
 require_once(__DIR__ . '/Card.php');
 require_once(__DIR__ . '/Player.php');
 require_once(__DIR__ . '/SeatStatus.php');
+require_once(__DIR__ . '/Table.php');
 
 class Seat
 {
@@ -65,6 +66,18 @@ class Seat
         $current_stack = $this->stack->getAmount();
         if ($current_stack < $amount) {
             $this->buyChips($amount - $current_stack);
+        }
+    }
+
+    public function prompt(Table $table): void
+    {
+        switch ($this->player->type) {
+            case PlayerType::HUMAN:
+                echo ($this->player->getName() . "'s cards: [" . implode(', ', $this->cards) . "]\n");
+                break;
+            case PlayerType::BOT:
+                echo ($this->player->getName() . "'s cards: [" . implode(', ', $this->cards) . "]\n");
+                break;
         }
     }
 }

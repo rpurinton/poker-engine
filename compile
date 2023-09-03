@@ -1,0 +1,34 @@
+#!/usr/local/bin/php -f
+<?php
+@unlink(__DIR__ . '/poker');
+$contents = "";
+exec("find * | grep '.php'", $files);
+foreach ($files as $file) {
+    $lines = file($file);
+    foreach ($lines as $line) {
+        if (strpos($line, 'namespace') !== false) continue;
+        if (strpos($line, 'require_once') !== false) continue;
+        if (strpos($line, '<?php') !== false) continue;
+        if (strpos($line, '#!/usr/local/bin/php') !== false) continue;
+        // strip comments
+        if (strpos($line, '//') !== false) {
+            $line = substr($line, 0, strpos($line, '//'));
+        }
+        if ($line != "\n") $contents .= $line;
+    }
+}
+$contents = "#!/usr/local/bin/php -f\n<?php\n\nnamespace RPurinton\poker;\n\n" . $contents;
+$lines = file(__DIR__ . '/main');
+foreach ($lines as $line) {
+    if (strpos($line, 'namespace') !== false) continue;
+    if (strpos($line, 'require_once') !== false) continue;
+    if (strpos($line, '<?php') !== false) continue;
+    if (strpos($line, '#!/usr/local/bin/php') !== false) continue;
+    // strip comments
+    if (strpos($line, '//') !== false) {
+        $line = substr($line, 0, strpos($line, '//'));
+    }
+    if ($line != "\n") $contents .= $line;
+}
+file_put_contents(__DIR__ . '/poker', $contents);
+chmod(__DIR__ . '/poker', 0755);

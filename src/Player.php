@@ -9,10 +9,12 @@ require_once(__DIR__ . '/PlayerStatus.php');
 class Player
 {
     private PlayerStatus $status = PlayerStatus::STANDING;
+    private ?Pot $bankroll;
     public function __construct(
         private string $name,
-        private ?Pot $bankroll = new Pot(0)
+        public PlayerType $type = PlayerType::HUMAN
     ) {
+        $this->bankroll = new Pot(0);
     }
 
     public function getName(): string
