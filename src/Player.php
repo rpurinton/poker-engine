@@ -3,6 +3,7 @@
 namespace RPurinton\poker;
 
 require_once(__DIR__ . '/Pot.php');
+require_once(__DIR__ . '/PlayerType.php');
 require_once(__DIR__ . '/PlayerStatus.php');
 
 class Player

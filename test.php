@@ -10,10 +10,10 @@ $table = $casino->addTable(new Table([
     "id" => 1,
     "name" => "My Table",
 ]));
-$player1 = $casino->addPlayer(new Player("Bob"));
+$player1 = $casino->addPlayer(new Player("Russell"), PlayerType::HUMAN);
 $casino->buyChips($player1, 10000);
 $table->seatPlayer($player1, $table->seats[0])->buyChips(1000);
-$player2 = $casino->addPlayer(new Player("Sally"));
+$player2 = $casino->addPlayer(new Player("Lily"), PlayerType::BOT);
 $casino->buyChips($player2, 10000);
 $table->seatPlayer($player2, $table->seats[1])->buyChips(1000);
 $table->new_hand();

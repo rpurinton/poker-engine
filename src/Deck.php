@@ -32,9 +32,9 @@ class Deck
         );
     }
 
-    public function dealCard()
+    public function dealCard(array &$destination): void
     {
-        return array_pop($this->cards);
+        $destination[] = array_pop($this->cards);
     }
 
     private function createDeck()

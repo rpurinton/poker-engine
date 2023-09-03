@@ -356,9 +356,9 @@ class Deck
         );
     }
 
-    public function dealCard()
+    public function dealCard(array &$destination): void
     {
-        return array_pop($this->cards);
+        $destination[] = array_pop($this->cards);
     }
 
     private function createDeck()
@@ -510,6 +510,14 @@ enum GameType: int
             GameType::OMAHA_HILO => 'Omaha Hi/Lo',
         };
     }
+
+    public function num_hole_cards()
+    {
+        return match ($this) {
+            GameType::TEXAS_HOLDEM => 2,
+            GameType::OMAHA, GameType::OMAHA_HILO => 4,
+        };
+    }
 }
 
 File: src/Table.php:
@@ -630,6 +638,22 @@ class Table
         $this->action_position = $this->getNextActiveSeat($this->postBlinds());
         $this->deck->shuffle();
         $this->deck->cut();
+        $players = $this->getDealOrder();
+        print_r($players);
+    }
+
+    private function getDealOrder(): array
+    {
+        $players = [];
+        $seat_number = $this->button_position;
+        while (true) {
+            $seat_number++;
+            if ($seat_number >= count($this->seats)) $seat_number = 0;
+            $seat = $this->seats[$seat_number];
+            if ($seat->getStatus() == SeatStatus::PLAYING) $players[] = $seat->getPlayer();
+            if ($seat_number == $this->button_position) break;
+        }
+        return $players;
     }
 
     private function postBlinds(): int

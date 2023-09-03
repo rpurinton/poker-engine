@@ -10,12 +10,12 @@ class Seat
 {
     private SeatStatus $status = SeatStatus::EMPTY;
     private ?Player $player = null;
-    private array $cards = [];
-    private Pot $pot;
+    public array $cards = [];
+    private Pot $stack;
 
     public function __construct()
     {
-        $this->pot = new Pot(0);
+        $this->stack = new Pot(0);
     }
 
     public function getStatus(): SeatStatus
@@ -38,43 +38,14 @@ class Seat
         $this->player = $player;
     }
 
-    public function getCards(): array
+    public function getStack(): Pot
     {
-        return $this->cards;
-    }
-
-    public function setCards(array $cards): void
-    {
-        $this->cards = $cards;
-    }
-
-    public function getPot(): Pot
-    {
-        return $this->pot;
-    }
-
-    public function setPot(Pot $pot): void
-    {
-        $this->pot = $pot;
+        return $this->stack;
     }
 
     public function __toString(): string
     {
         return $this->player->getName();
-    }
-
-    public function addCard(Card $card): void
-    {
-        $this->cards[] = $card;
-    }
-
-    public function removeCard(Card $card): void
-    {
-        $key = array_search($card, $this->cards);
-
-        if ($key !== false) {
-            unset($this->cards[$key]);
-        }
     }
 
     public function clearCards(): void
@@ -84,7 +55,16 @@ class Seat
 
     public function buyChips(float $amount): void
     {
+        $amount = min($amount, $this->player->getBankroll()->getAmount());
         $this->player->getBankroll()->remove($amount);
-        $this->pot->add($amount);
+        $this->stack->add($amount);
+    }
+
+    public function topUp(float $amount): void
+    {
+        $current_stack = $this->stack->getAmount();
+        if ($current_stack < $amount) {
+            $this->buyChips($amount - $current_stack);
+        }
     }
 }

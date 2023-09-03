@@ -16,4 +16,12 @@ enum GameType: int
             GameType::OMAHA_HILO => 'Omaha Hi/Lo',
         };
     }
+
+    public function num_hole_cards()
+    {
+        return match ($this) {
+            GameType::TEXAS_HOLDEM => 2,
+            GameType::OMAHA, GameType::OMAHA_HILO => 4,
+        };
+    }
 }

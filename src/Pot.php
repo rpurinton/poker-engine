@@ -32,7 +32,7 @@ class Pot
     public function contribute(float $amount, Seat $seat)
     {
         $this->add($amount);
-        $seat->getPot()->remove($amount);
+        $seat->getStack()->remove($amount);
         $this->eligible[] = $seat;
     }
 

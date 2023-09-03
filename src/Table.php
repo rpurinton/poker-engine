@@ -31,8 +31,9 @@ class Table
     public array $communityCards = [];
     public array $muck = [];
     private HandEvaluator $handEvaluator;
-    private $button_position = 0;
-    private $action_position = 0;
+    private int $button_position = 0;
+    private int $action_position = 0;
+    public array $chat_history = [];
 
     public function __construct(array $config = [])
     {
@@ -100,10 +101,11 @@ class Table
 
     public function new_hand(): void
     {
-        echo ("Starting a new hand of " . $this->config['gametype']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]\n");
+        $this->chat("Starting a new hand of " . $this->config['gametype']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
+        $this->config['status'] = TableStatus::STARTING;
         $players_ready = $this->resetSeats();
         if ($players_ready < 2) {
-            echo ("Not enough players to start a new hand.\n");
+            $this->chat("Not enough players to start a new hand.");
             return;
         }
         $this->muck = [];
@@ -115,6 +117,31 @@ class Table
         $this->action_position = $this->getNextActiveSeat($this->postBlinds());
         $this->deck->shuffle();
         $this->deck->cut();
+        $this->dealHoleCards();
+    }
+
+    private function dealHoleCards(): void
+    {
+        $deal_order = $this->getDealOrder();
+        for ($i = 0; $i < $this->config["gametype"]->num_hole_cards(); $i++) {
+            foreach ($deal_order as $seat_number) {
+                $this->deck->dealCard($this->seats[$seat_number]->cards);
+            }
+        }
+    }
+
+    private function getDealOrder(): array
+    {
+        $deal_order = [];
+        $seat_number = $this->button_position;
+        while (true) {
+            $seat_number++;
+            if ($seat_number >= count($this->seats)) $seat_number = 0;
+            $seat = $this->seats[$seat_number];
+            if (in_array($seat->getStatus(), [SeatStatus::PLAYING, SeatStatus::POSTED])) $deal_order[] = $seat_number;
+            if ($seat_number == $this->button_position) break;
+        }
+        return $deal_order;
     }
 
     private function postBlinds(): int
@@ -127,14 +154,14 @@ class Table
         $small_blind_amount = $this->config['smallBlind'];
         $small_blind_seat_number = $this->getNextActiveSeat($this->button_position);
         $small_blind_seat = $this->seats[$small_blind_seat_number];
-        while ($small_blind_seat->getPot()->getAmount() < $small_blind_amount) {
+        while ($small_blind_seat->getStack()->getAmount() < $small_blind_amount) {
             $small_blind_seat->setStatus(SeatStatus::SITOUT);
             $small_blind_seat_number = $this->getNextActiveSeat($this->button_position);
             $small_blind_seat = $this->seats[$small_blind_seat_number];
         }
         $this->pots[0]->contribute($small_blind_amount, $small_blind_seat);
         $small_blind_seat->setStatus(SeatStatus::POSTED);
-        echo ($small_blind_seat->getPlayer()->getName() . " posts the small blind of $" . $small_blind_amount . "\n");
+        $this->chat($small_blind_seat->getPlayer()->getName() . " posts the small blind of $" . $small_blind_amount);
         return $small_blind_seat_number;
     }
 
@@ -143,14 +170,14 @@ class Table
         $big_blind_amount = $this->config['bigBlind'];
         $big_blind_seat_number = $this->getNextActiveSeat($small_blind_seat_number);
         $big_blind_seat = $this->seats[$big_blind_seat_number];
-        while ($big_blind_seat->getPot()->getAmount() < $big_blind_amount) {
+        while ($big_blind_seat->getStack()->getAmount() < $big_blind_amount) {
             $big_blind_seat->setStatus(SeatStatus::SITOUT);
             $big_blind_seat_number = $this->getNextActiveSeat($this->button_position + 2);
             $big_blind_seat = $this->seats[$big_blind_seat_number];
         }
         $this->pots[0]->contribute($big_blind_amount, $big_blind_seat);
         $big_blind_seat->setStatus(SeatStatus::POSTED);
-        echo ($big_blind_seat->getPlayer()->getName() . " posts the big blind of $" . $big_blind_amount . "\n");
+        $this->chat($big_blind_seat->getPlayer()->getName() . " posts the big blind of $" . $big_blind_amount);
         return $big_blind_seat_number;
     }
 
@@ -172,16 +199,17 @@ class Table
     {
         $players_ready = 0;
         foreach ($this->seats as $seat_number => $seat) {
-            $seat->setCards([]);
+            $seat->clearCards();
             switch ($seat->getStatus()) {
                 case SeatStatus::WAITING:
                 case SeatStatus::POSTED:
                 case SeatStatus::FOLDED:
                 case SeatStatus::PLAYING:
-                    if ($seat->getPot()->getAmount() < $this->config['bigBlind']) $seat->setStatus(SeatStatus::SITOUT);
+                    if ($seat->getStack()->getAmount() < $this->config['bigBlind']) $seat->setStatus(SeatStatus::SITOUT);
                     else {
                         $seat->setStatus(SeatStatus::PLAYING);
-                        echo ("Seat $seat_number\t{$seat->getPot()}\t{$seat->getPlayer()->getName()}\n");
+                        $seat->topUp($this->config['maxBuyIn']);
+                        $this->chat("Seat $seat_number\t{$seat->getStack()}\t{$seat->getPlayer()->getName()}");
                         $players_ready++;
                     }
                     break;
@@ -193,5 +221,11 @@ class Table
             }
         }
         return $players_ready;
+    }
+
+    public function chat($message)
+    {
+        $this->chat_history[] = $message;
+        echo ($message . "\n");
     }
 }
