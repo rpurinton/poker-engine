@@ -539,10 +539,10 @@ class Seat
     {
         switch ($this->player->type) {
             case PlayerType::HUMAN:
-                                echo ($this->player->getName() . " has : [" . implode('] [', $this->cards) . "] " . $table->HandEvaluator->hand_toString($this->cards, $table->communityCards) . "\n");
+                                echo ($this->player->getName() . "\t[" . implode('] [', $this->cards) . "] " . $table->HandEvaluator->hand_toString($this->cards, $table->communityCards) . "\n");
                 break;
             case PlayerType::BOT:
-                                echo ($this->player->getName() . " has : [" . implode('] [', $this->cards) . "] " . $table->HandEvaluator->hand_toString($this->cards, $table->communityCards) . "\n");
+                                echo ($this->player->getName() . "\t[" . implode('] [', $this->cards) . "] " . $table->HandEvaluator->hand_toString($this->cards, $table->communityCards) . "\n");
                 break;
         }
     }
@@ -667,6 +667,7 @@ class Table
     }
     public function new_hand(): void
     {
+        $this->chat("=============================================================");
         $this->chat("Starting a new hand of " . $this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $players_ready = $this->resetSeats();
@@ -692,19 +693,22 @@ class Table
         $this->deck->dealCard($this->communityCards);
         $this->deck->dealCard($this->communityCards);
         $this->deck->dealCard($this->communityCards);
-        $this->chat("The flop is [" . implode("] [", $this->communityCards) . "]");
+        $this->chat("========================================");
+        $this->chat("Flop:\t[" . implode("] [", $this->communityCards) . "]");
         $this->bettingRound();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::TURN;
         $this->deck->dealCard($this->muck);
         $this->deck->dealCard($this->communityCards);
-        $this->chat("The turn is [" . $this->communityCards[3] . "]");
+        $this->chat("========================================");
+        $this->chat("Turn:\t[" . implode("] [", $this->communityCards) . "]");
         $this->bettingRound();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::RIVER;
         $this->deck->dealCard($this->muck);
         $this->deck->dealCard($this->communityCards);
-        $this->chat("The river is [" . $this->communityCards[4] . "]");
+        $this->chat("========================================");
+        $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
         $this->action_position = $this->button_position;
         $this->bettingRound();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
@@ -802,6 +806,7 @@ class Table
     private function advanceButton(): void
     {
                 $this->button_position = $this->getNextActiveSeat($this->button_position);
+        $this->chat("The button is at seat " . $this->button_position . ". ({$this->seats[$this->button_position]->getPlayer()->getName()})");
     }
     private function getNextActiveSeat($seat): int
     {
@@ -813,7 +818,7 @@ class Table
     public function resetSeats(): int
     {
         $players_ready = 0;
-        echo ("Seat\tBankroll\tStack\tPlayer Name\n");
+        echo ("Seat\tBankroll\tChips In Play  \tPlayer Name\n");
         foreach ($this->seats as $seat_number => $seat) {
             $seat->clearCards();
             switch ($seat->getStatus()) {
