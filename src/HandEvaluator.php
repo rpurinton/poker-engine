@@ -673,14 +673,68 @@ class HandEvaluator
 
     private function high_card_toString(array $holeCards, array $communityCards): string
     {
-        return "High Card";
+        $combos = $this->get_combos_texas($holeCards, $communityCards);
+        $possible = [];
+        foreach ($combos as $combo) {
+            usort($combo, function ($a, $b) {
+                return $a->getRank()->numeric() <=> $b->getRank()->numeric();
+            });
+            if (count($combo) == 5) $possible[] = ["hand" => $combo, "card1_value" => $combo[4]->getRank()->numeric(), "card1" => $combo[4]->getRank()->display_long(), "card2_value" => $combo[3]->getRank()->numeric(), "card2" => $combo[3]->getRank()->display_long(), "card3_value" => $combo[2]->getRank()->numeric(), "card3" => $combo[2]->getRank()->display_long(), "card4_value" => $combo[1]->getRank()->numeric(), "card4" => $combo[1]->getRank()->display_long(), "card5_value" => $combo[0]->getRank()->numeric(), "card5" => $combo[0]->getRank()->display_long()];
+            else $possible[] = ["hand" => $combo, "card1_value" => $combo[1]->getRank()->numeric(), "card1" => $combo[1]->getRank()->display_long(), "card2_value" => $combo[0]->getRank()->numeric(), "card2" => $combo[0]->getRank()->display_long()];
+        }
+        $best_hand_index = 0;
+        $last_card1_value = 0;
+        $last_card2_value = 0;
+        $last_card3_value = 0;
+        $last_card4_value = 0;
+        $last_card5_value = 0;
+        // compare the card1 ranks, then card2, then card3, then card4, and finally card5 if necessary
+        for ($i = 1; $i < count($possible); $i++) {
+            if ($possible[$i]["card1_value"] > $last_card1_value) {
+                $best_hand_index = $i;
+                $last_card1_value = $possible[$i]["card1_value"];
+                $last_card2_value = $possible[$i]["card2_value"];
+                $last_card3_value = $possible[$i]["card3_value"];
+                $last_card4_value = $possible[$i]["card4_value"];
+                $last_card5_value = $possible[$i]["card5_value"];
+            } else if ($possible[$i]["card1_value"] === $last_card1_value && $possible[$i]["card2_value"] > $last_card2_value) {
+                $best_hand_index = $i;
+                $last_card1_value = $possible[$i]["card1_value"];
+                $last_card2_value = $possible[$i]["card2_value"];
+                $last_card3_value = $possible[$i]["card3_value"];
+                $last_card4_value = $possible[$i]["card4_value"];
+                $last_card5_value = $possible[$i]["card5_value"];
+            } else if ($possible[$i]["card1_value"] === $last_card1_value && $possible[$i]["card2_value"] === $last_card2_value && $possible[$i]["card3_value"] > $last_card3_value) {
+                $best_hand_index = $i;
+                $last_card1_value = $possible[$i]["card1_value"];
+                $last_card2_value = $possible[$i]["card2_value"];
+                $last_card3_value = $possible[$i]["card3_value"];
+                $last_card4_value = $possible[$i]["card4_value"];
+                $last_card5_value = $possible[$i]["card5_value"];
+            } else if ($possible[$i]["card1_value"] === $last_card1_value && $possible[$i]["card2_value"] === $last_card2_value && $possible[$i]["card3_value"] === $last_card3_value && $possible[$i]["card4_value"] > $last_card4_value) {
+                $best_hand_index = $i;
+                $last_card1_value = $possible[$i]["card1_value"];
+                $last_card2_value = $possible[$i]["card2_value"];
+                $last_card3_value = $possible[$i]["card3_value"];
+                $last_card4_value = $possible[$i]["card4_value"];
+                $last_card5_value = $possible[$i]["card5_value"];
+            } else if ($possible[$i]["card1_value"] === $last_card1_value && $possible[$i]["card2_value"] === $last_card2_value && $possible[$i]["card3_value"] === $last_card3_value && $possible[$i]["card4_value"] === $last_card4_value && $possible[$i]["card5_value"] > $last_card5_value) {
+                $best_hand_index = $i;
+                $last_card1_value = $possible[$i]["card1_value"];
+                $last_card2_value = $possible[$i]["card2_value"];
+                $last_card3_value = $possible[$i]["card3_value"];
+                $last_card4_value = $possible[$i]["card4_value"];
+                $last_card5_value = $possible[$i]["card5_value"];
+            }
+        }
+        return $possible[$best_hand_index]["card1"] . " High [" . implode("] [", $possible[$best_hand_index]["hand"]) . "]";
     }
 
 
     private function get_combos_texas(array $holeCards, array $communityCards): array
     {
         // return all unique 5 card combinations of hole cards and community cards sorted by rank
-        if (count($holeCards) + count($communityCards) < 5) return [];
+        if (count($communityCards) < 3) return [$holeCards];
         $combos = [];
         $cards = array_merge($holeCards, $communityCards);
         $n = count($cards);
