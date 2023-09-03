@@ -31,6 +31,7 @@ foreach ($files as $file) {
         if ($line != "\n") $contents .= $line;
         echo ("\rCompiled $file (" . count($lines) . " lines)          ");
     }
+    $contents .= "\n";
     echo ("\n");
 }
 $contents = "#!/usr/local/bin/php -f\n<?php\n\nnamespace RPurinton\poker;\n\n" . $contents;

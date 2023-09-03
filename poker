@@ -23,6 +23,7 @@ class Card
         return $this->rank->display() . $this->suit->display();
     }
 }
+
 class Casino
 {
     public array $tables = [];
@@ -82,6 +83,7 @@ class Casino
         $player->getBankroll()->remove($amount);
     }
 }
+
 class Deck
 {
     private $cards = [];
@@ -128,6 +130,7 @@ class Deck
         return $deck;
     }
 }
+
 enum GameType: int
 {
     case TEXAS_HOLDEM = 1;
@@ -149,9 +152,11 @@ enum GameType: int
         };
     }
 }
+
 class HandEvaluator
 {
 }
+
 enum Limit
 {
     case NL;
@@ -174,6 +179,7 @@ enum Limit
         ];
     }
 }
+
 class Player
 {
     private PlayerStatus $status = PlayerStatus::STANDING;
@@ -205,6 +211,7 @@ class Player
         return $this->name;
     }
 }
+
 enum PlayerStatus
 {
     case STANDING;
@@ -212,11 +219,13 @@ enum PlayerStatus
     case SEAT_RESERVED;
     case SEATED;
 }
+
 enum PlayerType
 {
     case HUMAN;
     case BOT;
 }
+
 class Pot
 {
     private array $eligible = [];
@@ -251,6 +260,7 @@ class Pot
         return '$' . number_format($this->amount, 2, '.', ',');
     }
 }
+
 enum Rank: int
 {
     case TWO = 2;
@@ -303,6 +313,7 @@ enum Rank: int
         ];
     }
 }
+
 class Seat
 {
     private SeatStatus $status = SeatStatus::EMPTY;
@@ -366,6 +377,7 @@ class Seat
         }
     }
 }
+
 enum SeatStatus
 {
     case EMPTY;
@@ -377,6 +389,7 @@ enum SeatStatus
     case TIMEOUT;
     case FOLDED;
 }
+
 enum Suit
 {
     case CLUBS;
@@ -402,6 +415,7 @@ enum Suit
         ];
     }
 }
+
 class Table
 {
     public array $seats = [];
@@ -524,7 +538,7 @@ class Table
         $this->bettingRound();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::SHOWDOWN;
-            }
+    }
     private function bettingRound(): void
     {
         while (!$this->potsGood()) {
@@ -614,7 +628,7 @@ class Table
     }
     private function advanceButton(): void
     {
-                $this->button_position = $this->getNextActiveSeat($this->button_position);
+        $this->button_position = $this->getNextActiveSeat($this->button_position);
     }
     private function getNextActiveSeat($seat): int
     {
@@ -656,6 +670,7 @@ class Table
         echo ($message . "\n");
     }
 }
+
 enum TableStatus: int
 {
     case WAITING_FOR_PLAYERS = 0;
@@ -680,6 +695,7 @@ enum TableStatus: int
         };
     }
 }
+
 $build_info = json_decode(file_get_contents('build_info.json'), true);
 echo ("poker (cli) v" . $build_info["number"] . " (built: " . $build_info["date"] . ")\n");
 $casino = new Casino("My Casino");
