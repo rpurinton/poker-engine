@@ -19,6 +19,16 @@ enum Suit
         };
     }
 
+    public function display_long(): string
+    {
+        return match ($this) {
+            Suit::CLUBS => 'Club',
+            Suit::DIAMONDS => 'Diamond',
+            Suit::HEARTS => 'Heart',
+            Suit::SPADES => 'Spade',
+        };
+    }
+
     public static function toArray(): array
     {
         return [
