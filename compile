@@ -8,7 +8,7 @@ echo ("Loading Build Info...");
 $build_info = json_decode(file_get_contents(__DIR__ . '/build_info.json'), true);
 echo ("done.\n");
 $build_info["number"]++;
-$build_info["date"] = date("c");
+$build_info["date"] = date("Y-m-d H:i:s T");
 echo ("Build Number: " . $build_info["number"] . "\n");
 echo ("Build Date: " . $build_info["date"] . "\n");
 echo ("Saving Build Info...");
