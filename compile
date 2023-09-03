@@ -17,6 +17,7 @@ echo ("done.\n");
 echo ("Compiling src...\n");
 exec("find src/* | grep '.php'", $files);
 foreach ($files as $file) {
+    echo ("Loading $file...");
     $lines = file($file);
     foreach ($lines as $line_number => $line) {
         echo ("\rCompiling $file line " . ($line_number + 1) . " of " . count($lines));

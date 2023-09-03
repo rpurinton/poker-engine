@@ -155,6 +155,176 @@ enum GameType: int
 
 class HandEvaluator
 {
+    public function __construct(private GameType $GameType)
+    {
+    }
+    public function setGameType(GameType $GameType): void
+    {
+        $this->GameType = $GameType;
+    }
+    public function hand_toString(array $holeCards, array $communityCards): string
+    {
+        switch ($this->GameType) {
+            case GameType::TEXAS_HOLDEM:
+                return $this->hand_toString_texas($holeCards, $communityCards);
+            case GameType::OMAHA;
+                return $this->hand_toString_omaha_hi($holeCards, $communityCards);
+            case GameType::OMAHA_HILO;
+                return $this->hand_toString_omaha_hi($holeCards, $communityCards) . $this->hand_toString_omaha_lo($holeCards, $communityCards);
+        }
+    }
+    public function hand_toString_texas(array $holeCards, array $communityCards): string
+    {
+        switch (true) {
+            case $this->is_royal_flush($holeCards, $communityCards):
+                return $this->royal_flush_toString($holeCards, $communityCards);
+            case $this->is_straight_flush($holeCards, $communityCards):
+                return $this->straight_flush_toString($holeCards, $communityCards);
+            case $this->is_four_of_a_kind($holeCards, $communityCards):
+                return $this->four_of_a_kind_toString($holeCards, $communityCards);
+            case $this->is_full_house($holeCards, $communityCards):
+                return $this->full_house_toString($holeCards, $communityCards);
+            case $this->is_flush($holeCards, $communityCards):
+                return $this->flush_toString($holeCards, $communityCards);
+            case $this->is_straight($holeCards, $communityCards):
+                return $this->straight_toString($holeCards, $communityCards);
+            case $this->is_three_of_a_kind($holeCards, $communityCards):
+                return $this->three_of_a_kind_toString($holeCards, $communityCards);
+            case $this->is_two_pair($holeCards, $communityCards):
+                return $this->two_pair_toString($holeCards, $communityCards);
+            case $this->is_pair($holeCards, $communityCards):
+                return $this->pair_toString($holeCards, $communityCards);
+            case $this->is_high_card($holeCards, $communityCards):
+                return $this->high_card_toString($holeCards, $communityCards);
+        }
+        return "Unknown";
+    }
+    public function hand_toString_omaha_hi(array $holeCards, array $communityCards): string
+    {
+        return "Omaha Hi\n";
+    }
+    public function hand_toString_omaha_lo(array $holeCards, array $communityCards): string
+    {
+        return "Omaha Lo\n";
+    }
+    private function is_royal_flush(array $holeCards, array $communityCards): bool
+    {
+                                                if (count($holeCards) + count($communityCards) < 5) return false;
+        switch ($this->GameType) {
+            case GameType::TEXAS_HOLDEM:
+                break;
+            case GameType::OMAHA;
+                break;
+        }
+        return false;
+    }
+    private function royal_flush_toString(array $holeCards, array $communityCards): string
+    {
+        return "Royal Flush\n";
+    }
+    private function is_straight_flush(array $holeCards, array $communityCards): bool
+    {
+        return false;
+    }
+    private function straight_flush_toString(array $holeCards, array $communityCards): string
+    {
+        return "Straight Flush\n";
+    }
+    private function is_four_of_a_kind(array $holeCards, array $communityCards): bool
+    {
+        return false;
+    }
+    private function four_of_a_kind_toString(array $holeCards, array $communityCards): string
+    {
+        return "Four of a Kind\n";
+    }
+    private function is_full_house(array $holeCards, array $communityCards): bool
+    {
+        return false;
+    }
+    private function full_house_toString(array $holeCards, array $communityCards): string
+    {
+        return "Full House\n";
+    }
+    private function is_flush(array $holeCards, array $communityCards): bool
+    {
+        return false;
+    }
+    private function flush_toString(array $holeCards, array $communityCards): string
+    {
+        return "Flush\n";
+    }
+    private function is_straight(array $holeCards, array $communityCards): bool
+    {
+        return false;
+    }
+    private function straight_toString(array $holeCards, array $communityCards): string
+    {
+        return "Straight\n";
+    }
+    private function is_three_of_a_kind(array $holeCards, array $communityCards): bool
+    {
+        return false;
+    }
+    private function three_of_a_kind_toString(array $holeCards, array $communityCards): string
+    {
+        return "Three of a Kind\n";
+    }
+    private function is_two_pair(array $holeCards, array $communityCards): bool
+    {
+        return false;
+    }
+    private function two_pair_toString(array $holeCards, array $communityCards): string
+    {
+        return "Two Pair\n";
+    }
+    private function is_pair(array $holeCards, array $communityCards): bool
+    {
+        return false;
+    }
+    private function pair_toString(array $holeCards, array $communityCards): string
+    {
+        return "Pair\n";
+    }
+    private function is_high_card(array $holeCards, array $communityCards): bool
+    {
+        return false;
+    }
+    private function high_card_toString(array $holeCards, array $communityCards): string
+    {
+        return "High Card\n";
+    }
+    private function get_combos_texas(array $holeCards, array $communityCards): array
+    {
+        $combos = [];
+        $cards = array_merge($holeCards, $communityCards);
+        $numCards = count($cards);
+        $numHoleCards = count($holeCards);
+        $numCommunityCards = count($communityCards);
+                if ($numCards < 5) return $combos;
+                if ($numCards === 5) {
+            $combos[] = $cards;
+            return $combos;
+        }
+                if ($numCards === 6) {
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 0, 3));
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 0, 2), array_slice($communityCards, 3, 1));
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 0, 1), array_slice($communityCards, 2, 1), array_slice($communityCards, 4, 1));
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 1, 1), array_slice($communityCards, 3, 1), array_slice($communityCards, 4, 1));
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 2, 1), array_slice($communityCards, 3, 1), array_slice($communityCards, 4, 1));
+            return $combos;
+        }
+                if ($numCards === 7) {
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 0, 5));
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 0, 4), array_slice($communityCards, 5, 1));
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 0, 3), array_slice($communityCards, 4, 1), array_slice($communityCards, 5, 1));
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 0, 2), array_slice($communityCards, 3, 1), array_slice($communityCards, 4, 1), array_slice($communityCards, 5, 1));
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 0, 1), array_slice($communityCards, 2, 1), array_slice($communityCards, 4, 1), array_slice($communityCards, 5, 1), array_slice($communityCards, 6, 1));
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 1, 1), array_slice($communityCards, 3, 1), array_slice($communityCards, 4, 1), array_slice($communityCards, 5, 1), array_slice($communityCards, 6, 1));
+            $combos[] = array_merge($holeCards, array_slice($communityCards, 2, 1), array_slice($communityCards, 3, 1), array_slice($communityCards, 4, 1), array_slice($communityCards, 5, 1), array_slice($communityCards, 6, 1));
+            return $combos;
+        }
+    }
 }
 
 enum Limit
@@ -369,10 +539,10 @@ class Seat
     {
         switch ($this->player->type) {
             case PlayerType::HUMAN:
-                echo ($this->player->getName() . "'s cards: [" . implode('] [', $this->cards) . "]\n");
+                                echo ($this->player->getName() . " has : [" . implode('] [', $this->cards) . "] " . $table->HandEvaluator->hand_toString($this->cards, $table->communityCards) . "\n");
                 break;
             case PlayerType::BOT:
-                echo ($this->player->getName() . "'s cards: [" . implode('] [', $this->cards) . "]\n");
+                                echo ($this->player->getName() . " has : [" . implode('] [', $this->cards) . "] " . $table->HandEvaluator->hand_toString($this->cards, $table->communityCards) . "\n");
                 break;
         }
     }
@@ -422,7 +592,7 @@ class Table
     private array $config = [
         "id" => null,
         "status" => TableStatus::WAITING_FOR_PLAYERS,
-        "gametype" => GameType::TEXAS_HOLDEM,
+        "GameType" => GameType::TEXAS_HOLDEM,
         "seats" => 9,
         "smallBlind" => 1,
         "bigBlind" => 2,
@@ -437,7 +607,7 @@ class Table
     public array $pots = [];
     public array $communityCards = [];
     public array $muck = [];
-    private HandEvaluator $handEvaluator;
+    public HandEvaluator $HandEvaluator;
     private int $button_position = 0;
     private int $action_position = 0;
     public array $chat_history = [];
@@ -446,7 +616,7 @@ class Table
         $this->config = array_merge($this->config, $config);
         $this->createSeats();
         $this->deck = new Deck();
-        $this->handEvaluator = new HandEvaluator();
+        $this->HandEvaluator = new HandEvaluator($this->config["GameType"]);
     }
     public function getSeats(): array
     {
@@ -454,11 +624,11 @@ class Table
     }
     public function getGameType(): ?GameType
     {
-        return $this->config['gametype'];
+        return $this->config['GameType'];
     }
-    public function setGameType(GameType $gameType): void
+    public function setGameType(GameType $GameType): void
     {
-        $this->config['gametype'] = $gameType;
+        $this->config['GameType'] = $GameType;
     }
     public function getConfig(): array
     {
@@ -497,7 +667,7 @@ class Table
     }
     public function new_hand(): void
     {
-        $this->chat("Starting a new hand of " . $this->config["limit"]->display() . " " . $this->config['gametype']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
+        $this->chat("Starting a new hand of " . $this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $players_ready = $this->resetSeats();
         if ($players_ready < 2) {
@@ -535,12 +705,15 @@ class Table
         $this->deck->dealCard($this->muck);
         $this->deck->dealCard($this->communityCards);
         $this->chat("The river is [" . $this->communityCards[4] . "]");
+        $this->action_position = $this->button_position;
         $this->bettingRound();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::SHOWDOWN;
-    }
+            }
     private function bettingRound(): void
     {
+        $this->action_position = $this->button_position;
+        $this->pots[0]->good = false;
         while (!$this->potsGood()) {
             $action_order = $this->getActionOrder();
             foreach ($action_order as $seat_number) {
@@ -573,7 +746,7 @@ class Table
     private function dealHoleCards(): void
     {
         $deal_order = $this->getDealOrder();
-        for ($i = 0; $i < $this->config["gametype"]->num_hole_cards(); $i++) {
+        for ($i = 0; $i < $this->config["GameType"]->num_hole_cards(); $i++) {
             foreach ($deal_order as $seat_number) {
                 $this->deck->dealCard($this->seats[$seat_number]->cards);
             }
@@ -628,7 +801,7 @@ class Table
     }
     private function advanceButton(): void
     {
-        $this->button_position = $this->getNextActiveSeat($this->button_position);
+                $this->button_position = $this->getNextActiveSeat($this->button_position);
     }
     private function getNextActiveSeat($seat): int
     {
@@ -640,6 +813,7 @@ class Table
     public function resetSeats(): int
     {
         $players_ready = 0;
+        echo ("Seat\tBankroll\tStack\tPlayer Name\n");
         foreach ($this->seats as $seat_number => $seat) {
             $seat->clearCards();
             switch ($seat->getStatus()) {
@@ -651,7 +825,7 @@ class Table
                     else {
                         $seat->setStatus(SeatStatus::PLAYING);
                         $seat->topUp($this->config['maxBuyIn']);
-                        $this->chat("Seat $seat_number\t{$seat->getStack()}\t{$seat->getPlayer()->getName()}");
+                        $this->chat("$seat_number\t{$seat->getPlayer()->getBankRoll()}\t{$seat->getStack()}\t{$seat->getPlayer()->getName()}");
                         $players_ready++;
                     }
                     break;
@@ -702,11 +876,12 @@ $casino = new Casino("My Casino");
 $table = $casino->addTable(new Table([
     "id" => 1,
     "name" => "My Table",
+    "seats" => 2,
 ]));
-$player1 = $casino->addPlayer(new Player("Russell"), PlayerType::HUMAN);
+$player1 = $casino->addPlayer(new Player("Russell", PlayerType::HUMAN));
 $casino->buyChips($player1, 10000);
 $table->seatPlayer($player1, $table->seats[0])->buyChips(1000);
-$player2 = $casino->addPlayer(new Player("Lily"), PlayerType::BOT);
+$player2 = $casino->addPlayer(new Player("Lily", PlayerType::BOT));
 $casino->buyChips($player2, 10000);
 $table->seatPlayer($player2, $table->seats[1])->buyChips(1000);
 $table->new_hand();

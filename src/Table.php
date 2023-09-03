@@ -15,7 +15,7 @@ class Table
     private array $config = [
         "id" => null,
         "status" => TableStatus::WAITING_FOR_PLAYERS,
-        "gametype" => GameType::TEXAS_HOLDEM,
+        "GameType" => GameType::TEXAS_HOLDEM,
         "seats" => 9,
         "smallBlind" => 1,
         "bigBlind" => 2,
@@ -30,7 +30,7 @@ class Table
     public array $pots = [];
     public array $communityCards = [];
     public array $muck = [];
-    private HandEvaluator $handEvaluator;
+    public HandEvaluator $HandEvaluator;
     private int $button_position = 0;
     private int $action_position = 0;
     public array $chat_history = [];
@@ -40,7 +40,7 @@ class Table
         $this->config = array_merge($this->config, $config);
         $this->createSeats();
         $this->deck = new Deck();
-        $this->handEvaluator = new HandEvaluator();
+        $this->HandEvaluator = new HandEvaluator($this->config["GameType"]);
     }
 
     public function getSeats(): array
@@ -50,12 +50,12 @@ class Table
 
     public function getGameType(): ?GameType
     {
-        return $this->config['gametype'];
+        return $this->config['GameType'];
     }
 
-    public function setGameType(GameType $gameType): void
+    public function setGameType(GameType $GameType): void
     {
-        $this->config['gametype'] = $gameType;
+        $this->config['GameType'] = $GameType;
     }
 
     public function getConfig(): array
@@ -101,7 +101,7 @@ class Table
 
     public function new_hand(): void
     {
-        $this->chat("Starting a new hand of " . $this->config["limit"]->display() . " " . $this->config['gametype']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
+        $this->chat("Starting a new hand of " . $this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $players_ready = $this->resetSeats();
         if ($players_ready < 2) {
@@ -139,6 +139,7 @@ class Table
         $this->deck->dealCard($this->muck);
         $this->deck->dealCard($this->communityCards);
         $this->chat("The river is [" . $this->communityCards[4] . "]");
+        $this->action_position = $this->button_position;
         $this->bettingRound();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::SHOWDOWN;
@@ -147,6 +148,8 @@ class Table
 
     private function bettingRound(): void
     {
+        $this->action_position = $this->button_position;
+        $this->pots[0]->good = false;
         while (!$this->potsGood()) {
             $action_order = $this->getActionOrder();
             foreach ($action_order as $seat_number) {
@@ -182,7 +185,7 @@ class Table
     private function dealHoleCards(): void
     {
         $deal_order = $this->getDealOrder();
-        for ($i = 0; $i < $this->config["gametype"]->num_hole_cards(); $i++) {
+        for ($i = 0; $i < $this->config["GameType"]->num_hole_cards(); $i++) {
             foreach ($deal_order as $seat_number) {
                 $this->deck->dealCard($this->seats[$seat_number]->cards);
             }
@@ -257,6 +260,7 @@ class Table
     public function resetSeats(): int
     {
         $players_ready = 0;
+        echo ("Seat\tBankroll\tStack\tPlayer Name\n");
         foreach ($this->seats as $seat_number => $seat) {
             $seat->clearCards();
             switch ($seat->getStatus()) {
@@ -268,7 +272,7 @@ class Table
                     else {
                         $seat->setStatus(SeatStatus::PLAYING);
                         $seat->topUp($this->config['maxBuyIn']);
-                        $this->chat("Seat $seat_number\t{$seat->getStack()}\t{$seat->getPlayer()->getName()}");
+                        $this->chat("$seat_number\t{$seat->getPlayer()->getBankRoll()}\t{$seat->getStack()}\t{$seat->getPlayer()->getName()}");
                         $players_ready++;
                     }
                     break;

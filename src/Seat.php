@@ -73,10 +73,12 @@ class Seat
     {
         switch ($this->player->type) {
             case PlayerType::HUMAN:
-                echo ($this->player->getName() . "'s cards: [" . implode('] [', $this->cards) . "]\n");
+                // todo add cli interaction with user here
+                echo ($this->player->getName() . " has : [" . implode('] [', $this->cards) . "] " . $table->HandEvaluator->hand_toString($this->cards, $table->communityCards) . "\n");
                 break;
             case PlayerType::BOT:
-                echo ($this->player->getName() . "'s cards: [" . implode('] [', $this->cards) . "]\n");
+                // todo add chatGPT API calls here
+                echo ($this->player->getName() . " has : [" . implode('] [', $this->cards) . "] " . $table->HandEvaluator->hand_toString($this->cards, $table->communityCards) . "\n");
                 break;
         }
     }
