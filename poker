@@ -1451,7 +1451,8 @@ class Seat
                         if ($input == "t") {
                             readline_callback_handler_remove();
                             echo ("\rType a message: ");
-                            $handle = fopen("php:                            $message = trim(fgets($handle));
+                            $handle = fopen("php://stdin", "r");
+                            $message = trim(fgets($handle));
                             fclose($handle);
                             $this->table->chat($this->player->get_name() . " said: " . $message);
                             readline_callback_handler_install('', function () {
@@ -1476,14 +1477,16 @@ class Seat
                         break;
                     case "r":
                         echo ("Raise amount: ");
-                        $handle = fopen("php:                        $amount = (float)fgets($handle);
+                        $handle = fopen("php://stdin", "r");
+                        $amount = (float)fgets($handle);
                         fclose($handle);
                         echo ("\n");
                         $this->table->raise($this, $amount);
                         break;
                     case "b":
                         echo ("Bet amount: ");
-                        $handle = fopen("php:                        $amount = (float)fgets($handle);
+                        $handle = fopen("php://stdin", "r");
+                        $amount = (float)fgets($handle);
                         fclose($handle);
                         echo ("\n");
                         $this->table->bet($this, $amount);

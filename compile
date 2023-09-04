@@ -27,7 +27,7 @@ foreach ($files as $file) {
         if (strpos($line, '#!/usr/local/bin/php') !== false) continue;
         // strip comments
         if (strpos($line, '//') !== false) {
-            $line = substr($line, 0, strpos($line, '//'));
+            if (strpos($line, 'php://') === false) $line = substr($line, 0, strpos($line, '//'));
         }
         if ($line != "\n") $contents .= $line;
         echo ("\rCompiled $file (" . count($lines) . " lines)          ");
