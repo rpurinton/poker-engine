@@ -34,6 +34,8 @@ class Table
     private int $button_position = 0;
     private int $action_position = 0;
     public array $chat_history = [];
+    private $hand_count = 0;
+    private $bet = 0;
 
     public function __construct(array $config = [])
     {
@@ -71,7 +73,7 @@ class Table
     private function createSeats(): void
     {
         for ($i = 0; $i < $this->config['seats']; $i++) {
-            $this->seats[] = new Seat();
+            $this->seats[$i] = new Seat($i);
         }
     }
 
@@ -101,18 +103,21 @@ class Table
 
     public function new_hand(): void
     {
+        $this->hand_count++;
+        $hand_count_display = number_format($this->hand_count, 0, '.', ',');
         echo ("=============================================================\n");
-        $this->chat("Starting a new hand of " . $this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
+        $this->chat("Starting hand #$hand_count_display of " . $this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $players_ready = $this->resetSeats();
         if ($players_ready < 2) {
             $this->chat("Not enough players to start a new hand.");
-            return;
+            die();
         }
         $this->muck = [];
         $this->communityCards = [];
         $this->pots = [];
         $this->pots[0] = new Pot(0, false);
+        $this->bet = $this->config["bigBlind"];
         $this->advanceButton();
         $this->deck = new Deck();
         $this->action_position = $this->postBlinds();
@@ -147,7 +152,22 @@ class Table
         $this->bettingRound();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::SHOWDOWN;
-        //$this->showdown();
+        $this->showdown();
+    }
+
+    private function showdown(): void
+    {
+        foreach ($this->pots as $key => $pot) {
+            if ($key == 0) $pot_display = "the Main Pot";
+            else $pot_display = "Side Pot $key";
+            $hands = [];
+            foreach ($pot->eligible as $seat_num => $seat) {
+                $hands[$seat_num] = $seat->cards;
+            }
+            $winning_seats = $this->HandEvaluator->get_winner_indexes($hands, $this->communityCards);
+            $results = $pot->payout($winning_seats, $pot_display);
+            foreach ($results as $result) $this->chat($result);
+        }
     }
 
     private function bettingRound(): void
@@ -227,6 +247,7 @@ class Table
         }
         $this->pots[0]->contribute($small_blind_amount, $small_blind_seat);
         $small_blind_seat->setStatus(SeatStatus::POSTED);
+        $small_blind_seat->bet = $small_blind_amount;
         $this->chat($small_blind_seat->getPlayer()->getName() . " posts the small blind of $" . $small_blind_amount);
         return $small_blind_seat_number;
     }
@@ -243,6 +264,7 @@ class Table
         }
         $this->pots[0]->contribute($big_blind_amount, $big_blind_seat);
         $big_blind_seat->setStatus(SeatStatus::POSTED);
+        $big_blind_seat->bet = $big_blind_amount;
         $this->chat($big_blind_seat->getPlayer()->getName() . " posts the big blind of $" . $big_blind_amount);
         return $big_blind_seat_number;
     }

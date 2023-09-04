@@ -35,7 +35,24 @@ class Pot
     {
         $this->add($amount);
         $seat->getStack()->remove($amount);
-        $this->eligible[] = $seat;
+        $this->eligible[$seat->seat_num] = $seat;
+    }
+
+    public function payout(array $winner_indexes, string $display_name): array
+    {
+        $results = [];
+        $amount = round($this->amount / count($winner_indexes), 2);
+        foreach ($winner_indexes as $index) {
+            $results[] = $this->eligible[$index]->getPlayer()->getName() . " wins $" . number_format($amount, 2, '.', ',') . " from " . $display_name;
+            $this->eligible[$index]->getStack()->add($amount);
+            $this->remove($amount);
+        }
+        if ($this->amount) {
+            $results[] = "The extra $" . number_format($this->amount, 2, '.', ',') . " goes to " . $this->eligible[$index]->getPlayer()->getName();
+            $this->eligible[$index]->getStack()->add($this->amount);
+            $this->remove($this->amount);
+        }
+        return $results;
     }
 
     public function __toString(): string

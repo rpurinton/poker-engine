@@ -13,8 +13,8 @@ class Seat
     private ?Player $player = null;
     public array $cards = [];
     private Pot $stack;
-
-    public function __construct()
+    public float $bet = 0;
+    public function __construct(public int $seat_num)
     {
         $this->stack = new Pot(0);
     }

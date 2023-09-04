@@ -20,13 +20,6 @@ $table->seatPlayer($player1, $table->seats[0])->buyChips(1000);
 $player2 = $casino->addPlayer(new Player("Lily", PlayerType::BOT));
 $casino->buyChips($player2, 10000);
 $table->seatPlayer($player2, $table->seats[1])->buyChips(1000);
-$table->new_hand();
-foreach ($table->pots as $key => $pot) {
-    echo ("Pot[$key]: " . $pot . " ");
-    $hands = [];
-    foreach ($pot->eligible as $seat_num => $seat) {
-        $hands[$seat_num] = $seat->cards;
-    }
-    $winning_seats = $table->HandEvaluator->get_winner_indexes($hands, $table->communityCards);
-    echo ("Winning Seats: " . print_r($winning_seats, true) . "\n");
+for ($i = 0; $i < 1; $i++) {
+    $table->new_hand();
 }
