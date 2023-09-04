@@ -25,3 +25,4 @@ for ($i = 0; $i < 3; $i++) {
 }
 foreach ($table->seats as $seat) $seat->cash_out();
 foreach ($casino->players as $player) $casino->cash_out($player);
+//print_r($table->chat_history);

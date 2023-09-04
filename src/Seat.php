@@ -55,12 +55,13 @@ class Seat
         $this->cards = [];
     }
 
-    public function buy_chips(float $amount): void
+    public function buy_chips(float $amount, bool $rebuy = false): void
     {
         $amount = min($amount, $this->player->get_bankroll()->get_amount());
         $this->player->get_bankroll()->remove($amount);
         $this->stack->add($amount);
-        $this->table->chat($this->player->get_name() . " buys in for $" . number_format($amount, 2, ".", ","));
+        if ($rebuy) $this->table->chat($this->player->get_name() . " rebuys $" . number_format($amount, 2, ".", ","));
+        else $this->table->chat($this->player->get_name() . " buys in for $" . number_format($amount, 2, ".", ","));
     }
 
     public function cash_out(): void
@@ -77,6 +78,7 @@ class Seat
     public function top_up(float $amount): void
     {
         if (!isset($this->player)) return;
+        if (!$this->player->auto_top_up) return;
         if ($this->player->get_bankroll()->get_amount() == 0 && $this->stack->get_amount() == 0) {
             $this->status = SeatStatus::SITOUT;
             return;
@@ -86,7 +88,7 @@ class Seat
         if ($current_stack < $amount) {
             $diff_amount = $amount - $current_stack;
             $amount = min($diff_amount, $this->player->get_bankroll()->get_amount());
-            $this->buy_chips($amount);
+            $this->buy_chips($amount, true);
         }
     }
 

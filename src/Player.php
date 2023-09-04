@@ -12,7 +12,8 @@ class Player
     private ?Pot $bankroll;
     public function __construct(
         private string $name,
-        public PlayerType $type = PlayerType::HUMAN
+        public PlayerType $type = PlayerType::HUMAN,
+        public bool $auto_top_up = true
     ) {
         $this->bankroll = new Pot(0);
     }
