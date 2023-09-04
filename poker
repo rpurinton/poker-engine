@@ -1435,6 +1435,11 @@ class Seat
         switch ($this->player->type) {
             case PlayerType::HUMAN:
                 echo ("=============================================================\n");
+                foreach ($this->table->pots as $key => $pot) {
+                    if ($key == 0) $pot_display_name = "Main Pot";
+                    else $pot_display_name = "Side Pot " . $key;
+                    echo ($pot_display_name . ": $pot\n");
+                }
                 echo ("Seat\tStack\tIn For\tName\tPocket\tHand\n");
                 echo ($this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n");
                 foreach ($options as $key => $option) {
