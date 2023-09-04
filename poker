@@ -134,135 +134,24 @@ class Deck
     }
 }
 
-enum TableStatus: int
+enum GameType: int
 {
-    case WAITING_FOR_PLAYERS = 0;
-    case STARTING = 1;
-    case PREFLOP = 2;
-    case FLOP = 3;
-    case TURN = 4;
-    case RIVER = 5;
-    case SHOWDOWN = 6;
-    case HAND_OVER = 7;
-    case ALLIN = 8;
-    public function display(): string
+    case TEXAS_HOLDEM = 1;
+    case OMAHA = 2;
+    case OMAHA_HILO = 3;
+    public function display()
     {
         return match ($this) {
-            TableStatus::WAITING_FOR_PLAYERS => 'Waiting for players',
-            TableStatus::STARTING => 'Starting',
-            TableStatus::PREFLOP => 'Pre-flop',
-            TableStatus::FLOP => 'Flop',
-            TableStatus::TURN => 'Turn',
-            TableStatus::RIVER => 'River',
-            TableStatus::SHOWDOWN => 'Showdown',
-            TableStatus::HAND_OVER => 'Hand over',
-            TableStatus::ALLIN => "Everyone's All-in",
+            GameType::TEXAS_HOLDEM => 'Texas Hold \'Em',
+            GameType::OMAHA => 'Omaha',
+            GameType::OMAHA_HILO => 'Omaha Hi/Lo',
         };
     }
-}
-
-enum PlayerStatus
-{
-    case STANDING;
-    case WAITING_FOR_TABLE;
-    case SEAT_RESERVED;
-    case SEATED;
-}
-
-enum Suit
-{
-    case CLUBS;
-    case DIAMONDS;
-    case HEARTS;
-    case SPADES;
-    public function display(): string
+    public function num_hole_cards()
     {
         return match ($this) {
-            Suit::CLUBS => 'c',
-            Suit::DIAMONDS => 'd',
-            Suit::HEARTS => 'h',
-            Suit::SPADES => 's',
-        };
-    }
-    public function display_long(): string
-    {
-        return match ($this) {
-            Suit::CLUBS => 'Club',
-            Suit::DIAMONDS => 'Diamond',
-            Suit::HEARTS => 'Heart',
-            Suit::SPADES => 'Spade',
-        };
-    }
-    public static function toArray(): array
-    {
-        return [
-            Suit::CLUBS,
-            Suit::DIAMONDS,
-            Suit::HEARTS,
-            Suit::SPADES,
-        ];
-    }
-}
-
-enum PlayerType: string
-{
-    case HUMAN = "Human";
-    case AI = "AI";
-    public function display(): string
-    {
-        return match ($this) {
-            PlayerType::HUMAN => "Human",
-            PlayerType::AI => "AI",
-        };
-    }
-}
-
-enum SeatStatus
-{
-    case EMPTY;
-    case RESERVED;
-    case WAITING;
-    case POSTED;
-    case PLAYING;
-    case SITOUT;
-    case TIMEOUT;
-    case FOLDED;
-    case CHECKED;
-    case CALLED;
-    case BET;
-    case RAISED;
-    case ALLIN;
-    case UPCOMING_ACTION;
-    public function active(): bool
-    {
-        return match ($this) {
-            SeatStatus::UPCOMING_ACTION,
-            SeatStatus::POSTED,
-            SeatStatus::PLAYING,
-            SeatStatus::CHECKED,
-            SeatStatus::CALLED,
-            SeatStatus::BET,
-            SeatStatus::RAISED => true,
-            default => false,
-        };
-    }
-    public function display(): string
-    {
-        return match ($this) {
-            SeatStatus::EMPTY => "Empty",
-            SeatStatus::RESERVED => "Reserved",
-            SeatStatus::WAITING => "Waiting",
-            SeatStatus::POSTED => "Posted",
-            SeatStatus::PLAYING => "Playing",
-            SeatStatus::SITOUT => "Sitout",
-            SeatStatus::TIMEOUT => "Timeout",
-            SeatStatus::FOLDED => "Folded",
-            SeatStatus::CHECKED => "Checked",
-            SeatStatus::CALLED => "Called",
-            SeatStatus::BET => "Bet",
-            SeatStatus::RAISED => "Raised",
-            SeatStatus::ALLIN => "All-in",
-            SeatStatus::UPCOMING_ACTION => "Upcoming Action",
+            GameType::TEXAS_HOLDEM => 2,
+            GameType::OMAHA, GameType::OMAHA_HILO => 4,
         };
     }
 }
@@ -287,6 +176,27 @@ enum Limit
             Limit::PL,
             Limit::FL,
         ];
+    }
+}
+
+enum PlayerStatus
+{
+    case STANDING;
+    case WAITING_FOR_TABLE;
+    case SEAT_RESERVED;
+    case SEATED;
+}
+
+enum PlayerType: string
+{
+    case HUMAN = "Human";
+    case AI = "AI";
+    public function display(): string
+    {
+        return match ($this) {
+            PlayerType::HUMAN => "Human",
+            PlayerType::AI => "AI",
+        };
     }
 }
 
@@ -379,24 +289,114 @@ enum Rank: int
     }
 }
 
-enum GameType: int
+enum SeatStatus
 {
-    case TEXAS_HOLDEM = 1;
-    case OMAHA = 2;
-    case OMAHA_HILO = 3;
-    public function display()
+    case EMPTY;
+    case RESERVED;
+    case WAITING;
+    case POSTED;
+    case PLAYING;
+    case SITOUT;
+    case TIMEOUT;
+    case FOLDED;
+    case CHECKED;
+    case CALLED;
+    case BET;
+    case RAISED;
+    case ALLIN;
+    case UPCOMING_ACTION;
+    public function active(): bool
     {
         return match ($this) {
-            GameType::TEXAS_HOLDEM => 'Texas Hold \'Em',
-            GameType::OMAHA => 'Omaha',
-            GameType::OMAHA_HILO => 'Omaha Hi/Lo',
+            SeatStatus::UPCOMING_ACTION,
+            SeatStatus::POSTED,
+            SeatStatus::PLAYING,
+            SeatStatus::CHECKED,
+            SeatStatus::CALLED,
+            SeatStatus::BET,
+            SeatStatus::RAISED => true,
+            default => false,
         };
     }
-    public function num_hole_cards()
+    public function display(): string
     {
         return match ($this) {
-            GameType::TEXAS_HOLDEM => 2,
-            GameType::OMAHA, GameType::OMAHA_HILO => 4,
+            SeatStatus::EMPTY => "Empty",
+            SeatStatus::RESERVED => "Reserved",
+            SeatStatus::WAITING => "Waiting",
+            SeatStatus::POSTED => "Posted",
+            SeatStatus::PLAYING => "Playing",
+            SeatStatus::SITOUT => "Sitout",
+            SeatStatus::TIMEOUT => "Timeout",
+            SeatStatus::FOLDED => "Folded",
+            SeatStatus::CHECKED => "Checked",
+            SeatStatus::CALLED => "Called",
+            SeatStatus::BET => "Bet",
+            SeatStatus::RAISED => "Raised",
+            SeatStatus::ALLIN => "All-in",
+            SeatStatus::UPCOMING_ACTION => "Upcoming Action",
+        };
+    }
+}
+
+enum Suit
+{
+    case CLUBS;
+    case DIAMONDS;
+    case HEARTS;
+    case SPADES;
+    public function display(): string
+    {
+        return match ($this) {
+            Suit::CLUBS => 'c',
+            Suit::DIAMONDS => 'd',
+            Suit::HEARTS => 'h',
+            Suit::SPADES => 's',
+        };
+    }
+    public function display_long(): string
+    {
+        return match ($this) {
+            Suit::CLUBS => 'Club',
+            Suit::DIAMONDS => 'Diamond',
+            Suit::HEARTS => 'Heart',
+            Suit::SPADES => 'Spade',
+        };
+    }
+    public static function toArray(): array
+    {
+        return [
+            Suit::CLUBS,
+            Suit::DIAMONDS,
+            Suit::HEARTS,
+            Suit::SPADES,
+        ];
+    }
+}
+
+enum TableStatus: int
+{
+    case WAITING_FOR_PLAYERS = 0;
+    case STARTING = 1;
+    case PREFLOP = 2;
+    case FLOP = 3;
+    case TURN = 4;
+    case RIVER = 5;
+    case SHOWDOWN = 6;
+    case HAND_OVER = 7;
+    case ALLIN = 8;
+    public function display(): string
+    {
+        return match ($this) {
+            TableStatus::WAITING_FOR_PLAYERS => 'Waiting for players',
+            TableStatus::STARTING => 'Starting',
+            TableStatus::PREFLOP => 'Pre-flop',
+            TableStatus::FLOP => 'Flop',
+            TableStatus::TURN => 'Turn',
+            TableStatus::RIVER => 'River',
+            TableStatus::SHOWDOWN => 'Showdown',
+            TableStatus::HAND_OVER => 'Hand over',
+            TableStatus::ALLIN => "Everyone's All-in",
         };
     }
 }
@@ -598,6 +598,300 @@ class Player
     }
 }
 
+class Flush
+{
+    public static function is(array $combos): bool
+    {
+        if ((count($combos) === 1) && count($combos[0]) === 2) return false;
+        return count(self::possibles($combos)) > 0;
+    }
+    public static function possibles(array $combos): array
+    {
+        $possibles = [];
+        foreach ($combos as $index => $combo) {
+            $flush_string = "";
+            foreach ($combo as $card) {
+                $flush_string .= $card->getSuit()->display();
+            }
+            $flush = false;
+            if ($flush_string == "ccccc") $flush = true;
+            if ($flush_string == "ddddd") $flush = true;
+            if ($flush_string == "hhhhh") $flush = true;
+            if ($flush_string == "sssss") $flush = true;
+            if ($flush) $possibles[$index] = [
+                "hand" => $combo,
+                "kicker1" => $combo[4]->getRank()->numeric(),
+                "kicker2" => $combo[3]->getRank()->numeric(),
+                "kicker3" => $combo[2]->getRank()->numeric(),
+                "kicker4" => $combo[1]->getRank()->numeric(),
+                "kicker5" => $combo[0]->getRank()->numeric(),
+                "display" => $combo[4]->getRank()->display_long() . " High FLUSH [" . implode("] [", $combo) . "]"
+            ];
+        }
+        return $possibles;
+    }
+    public static function best(array $possibles): array
+    {
+        if (count($possibles) === 0) return [];
+        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
+        $best_kicker1 = 0;
+        $best_kicker2 = 0;
+        $best_kicker3 = 0;
+        $best_kicker4 = 0;
+        $best_kicker5 = 0;
+        foreach ($possibles as $possible) {
+            if ($possible["kicker1"] > $best_kicker1) {
+                $best_kicker1 = $possible["kicker1"];
+                $best_kicker2 = $possible["kicker2"];
+                $best_kicker3 = $possible["kicker3"];
+                $best_kicker4 = $possible["kicker4"];
+                $best_kicker5 = $possible["kicker5"];
+            }
+            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] > $best_kicker2) {
+                $best_kicker2 = $possible["kicker2"];
+                $best_kicker3 = $possible["kicker3"];
+                $best_kicker4 = $possible["kicker4"];
+                $best_kicker5 = $possible["kicker5"];
+            }
+            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] > $best_kicker3) {
+                $best_kicker3 = $possible["kicker3"];
+                $best_kicker4 = $possible["kicker4"];
+                $best_kicker5 = $possible["kicker5"];
+            }
+            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] > $best_kicker4) {
+                $best_kicker4 = $possible["kicker4"];
+                $best_kicker5 = $possible["kicker5"];
+            }
+            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] === $best_kicker4 && $possible["kicker5"] > $best_kicker5) {
+                $best_kicker5 = $possible["kicker5"];
+            }
+        }
+        $best = [];
+        foreach ($possibles as $index => $possible) {
+            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] === $best_kicker4 && $possible["kicker5"] === $best_kicker5) {
+                $best[$index] = $possible;
+            }
+        }
+        return $best;
+    }
+    public static function toString(array $combos): string
+    {
+        $best = self::best(self::possibles($combos));
+        foreach ($best as $combo) return $combo["display"];
+    }
+}
+
+class FourofaKind
+{
+    public static function is(array $combos): bool
+    {
+        if ((count($combos) === 1) && count($combos[0]) === 2) return false;
+        return count(self::possibles($combos)) > 0;
+    }
+    public static function possibles(array $combos): array
+    {
+        $possibles = [];
+        foreach ($combos as $index => $combo) {
+            $fok_string = "";
+            foreach ($combo as $card) {
+                $fok_string .= $card->getRank()->display();
+            }
+            if ($fok_string[0] === $fok_string[1] && $fok_string[1] === $fok_string[2] && $fok_string[2] === $fok_string[3]) {
+                $possibles[$index] = [
+                    "hand" => $combo,
+                    "main_rank" => $combo[0]->getRank()->numeric(),
+                    "kicker_rank" => $combo[4]->getRank()->numeric(),
+                    "display" => "FOUR-OF-A-KIND " . $combo[0]->getRank()->display_long() . "s (" . $combo[4]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
+                ];
+            }
+            if ($fok_string[1] === $fok_string[2] && $fok_string[2] === $fok_string[3] && $fok_string[3] === $fok_string[4]) {
+                $possibles[$index] = [
+                    "hand" => $combo,
+                    "main_rank" => $combo[1]->getRank()->numeric(),
+                    "kicker_rank" => $combo[0]->getRank()->numeric(),
+                    "display" => "FOUR-OF-A-KIND " . $combo[1]->getRank()->display_long() . "s (" . $combo[0]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
+                ];
+            }
+        }
+        return $possibles;
+    }
+    public static function best(array $possibles): array
+    {
+        if (count($possibles) === 0) return [];
+        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
+        $best_main = 0;
+        $best_kicker = 0;
+        foreach ($possibles as $possible) {
+            if ($possible["main_rank"] > $best_main) {
+                $best_main = $possible["main_rank"];
+                $best_kicker = $possible["kicker_rank"];
+            }
+            if ($possible["main_rank"] === $best_main && $possible["kicker_rank"] > $best_kicker) {
+                $best_kicker = $possible["kicker_rank"];
+            }
+        }
+        $best = [];
+        foreach ($possibles as $index => $possible) {
+            if ($possible["main_rank"] === $best_main && $possible["kicker_rank"] === $best_kicker) {
+                $best[$index] = $possible;
+            }
+        }
+        return $best;
+    }
+    public static function toString(array $combos): string
+    {
+        $best = self::best(self::possibles($combos));
+        foreach ($best as $combo) return $combo["display"];
+    }
+}
+
+class FullHouse
+{
+    public static function is(array $combos): bool
+    {
+        if ((count($combos) === 1) && count($combos[0]) === 2) return false;
+        return count(self::possibles($combos)) > 0;
+    }
+    public static function possibles(array $combos): array
+    {
+        $possibles = [];
+        foreach ($combos as $combo) {
+            $fh_string = "";
+            foreach ($combo as $index => $card) {
+                $fh_string .= $card->getRank()->display();
+            }
+            if ($fh_string[0] === $fh_string[1] && $fh_string[1] === $fh_string[2] && $fh_string[3] === $fh_string[4]) {
+                $possibles[$index] = [
+                    "hand" => $combo,
+                    "main_rank" => $combo[0]->getRank()->numeric(),
+                    "kicker_rank" => $combo[4]->getRank()->numeric(),
+                    "display" => "FULL HOUSE " . $combo[0]->getRank()->display_long() . "s of " . $combo[4]->getRank()->display_long() . "s [" . implode("] [", $combo) . "]"
+                ];
+            }
+            if ($fh_string[0] === $fh_string[1] && $fh_string[2] === $fh_string[3] && $fh_string[3] === $fh_string[4]) {
+                $possibles[$index] = [
+                    "hand" => $combo,
+                    "main_rank" => $combo[4]->getRank()->numeric(),
+                    "kicker_rank" => $combo[0]->getRank()->numeric(),
+                    "display" => "FULL HOUSE " . $combo[4]->getRank()->display_long() . "s of " . $combo[0]->getRank()->display_long() . "s [" . implode("] [", $combo) . "]"
+                ];
+            }
+        }
+        return $possibles;
+    }
+    public static function best(array $possibles): array
+    {
+        if (count($possibles) === 0) return [];
+        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
+        $best_main = 0;
+        $best_kicker = 0;
+        foreach ($possibles as $possible) {
+            if ($possible["main_rank"] > $best_main) {
+                $best_main = $possible["main_rank"];
+                $best_kicker = $possible["kicker_rank"];
+            }
+            if ($possible["main_rank"] === $best_main && $possible["kicker_rank"] > $best_kicker) {
+                $best_kicker = $possible["kicker_rank"];
+            }
+        }
+        $best = [];
+        foreach ($possibles as $index => $possible) {
+            if ($possible["main_rank"] === $best_main && $possible["kicker_rank"] === $best_kicker) {
+                $best[$index] = $possible;
+            }
+        }
+        return $best;
+    }
+    public static function toString(array $combos): string
+    {
+        $best = self::best(self::possibles($combos));
+        foreach ($best as $combo) return $combo["display"];
+    }
+}
+
+class HighCard
+{
+    public static function is(array $combos): bool
+    {
+                return true;
+    }
+    public static function possibles(array $combos): array
+    {
+        $possibles = [];
+        foreach ($combos as $index => $combo) {
+            if (count($combo) === 2) {
+                return [
+                    [
+                        "hand" => $combo,
+                        "kicker1" => $combo[1]->getRank()->numeric(),
+                        "kicker2" => $combo[0]->getRank()->numeric(),
+                        "display" => $combo[1]->getRank()->display_long() . " HIGH (" . $combo[0]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
+                    ]
+                ];
+            }
+            $possibles[$index] = [
+                "hand" => $combo,
+                "kicker1" => $combo[4]->getRank()->numeric(),
+                "kicker2" => $combo[3]->getRank()->numeric(),
+                "kicker3" => $combo[2]->getRank()->numeric(),
+                "kicker4" => $combo[1]->getRank()->numeric(),
+                "kicker5" => $combo[0]->getRank()->numeric(),
+                "display" => $combo[4]->getRank()->display_long() . " HIGH (" . $combo[3]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
+            ];
+        }
+        return $possibles;
+    }
+    public static function best(array $possibles): array
+    {
+        if (count($possibles) === 0) return [];
+        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
+        $best_kicker1 = 0;
+        $best_kicker2 = 0;
+        $best_kicker3 = 0;
+        $best_kicker4 = 0;
+        $best_kicker5 = 0;
+        foreach ($possibles as $possible) {
+            if ($possible["kicker1"] > $best_kicker1) {
+                $best_kicker1 = $possible["kicker1"];
+                $best_kicker2 = $possible["kicker2"];
+                $best_kicker3 = $possible["kicker3"];
+                $best_kicker4 = $possible["kicker4"];
+                $best_kicker5 = $possible["kicker5"];
+            }
+            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] > $best_kicker2) {
+                $best_kicker2 = $possible["kicker2"];
+                $best_kicker3 = $possible["kicker3"];
+                $best_kicker4 = $possible["kicker4"];
+                $best_kicker5 = $possible["kicker5"];
+            }
+            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] > $best_kicker3) {
+                $best_kicker3 = $possible["kicker3"];
+                $best_kicker4 = $possible["kicker4"];
+                $best_kicker5 = $possible["kicker5"];
+            }
+            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] > $best_kicker4) {
+                $best_kicker4 = $possible["kicker4"];
+                $best_kicker5 = $possible["kicker5"];
+            }
+            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] === $best_kicker4 && $possible["kicker5"] > $best_kicker5) {
+                $best_kicker5 = $possible["kicker5"];
+            }
+        }
+        $best = [];
+        foreach ($possibles as $index => $possible) {
+            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] === $best_kicker4 && $possible["kicker5"] === $best_kicker5) {
+                $best[$index] = $possible;
+            }
+        }
+        return $best;
+    }
+    public static function toString(array $combos): string
+    {
+        $best = self::best(self::possibles($combos));
+        foreach ($best as $combo) return $combo["display"];
+    }
+}
+
 class Pair
 {
     public static function is(array $combos): bool
@@ -709,6 +1003,141 @@ class Pair
     {
         $best = self::best(self::possibles($combos));
         foreach ($best as $combo) return $combo["display"];
+    }
+}
+
+class Straight
+{
+    public static function is(array $combos): bool
+    {
+        if ((count($combos) === 1) && count($combos[0]) === 2) return false;
+        return count(self::possibles($combos)) > 0;
+    }
+    public static function possibles(array $combos): array
+    {
+        $possibles = [];
+        foreach ($combos as $index => $combo) {
+            $straight_string = "";
+            foreach ($combo as $card) {
+                $straight_string .= $card->getRank()->display();
+            }
+            $flush = false;
+            $straight = false;
+            if ($straight_string == "2345A") $straight = true;
+            if ($straight_string == "23456") $straight = true;
+            if ($straight_string == "34567") $straight = true;
+            if ($straight_string == "45678") $straight = true;
+            if ($straight_string == "56789") $straight = true;
+            if ($straight_string == "6789T") $straight = true;
+            if ($straight_string == "789TJ") $straight = true;
+            if ($straight_string == "89TJQ") $straight = true;
+            if ($straight_string == "9TJQK") $straight = true;
+            if ($straight_string == "TJQKA") $straight = true;
+            if ($flush && $straight) $possibles[$index] = [
+                "hand" => $combo,
+                "kicker1" => $combo[4]->getRank()->numeric(),
+                "display" => $combo[4]->getRank()->display_long() . " High STRAIGHT [" . implode("] [", $combo) . "]"
+            ];
+        }
+        return $possibles;
+    }
+    public static function best(array $possibles): array
+    {
+        if (count($possibles) === 0) return [];
+        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
+        $best_kicker1 = 0;
+        foreach ($possibles as $possible) {
+            if ($possible["kicker1"] > $best_kicker1) {
+                $best_kicker1 = $possible["kicker1"];
+            }
+        }
+        $best = [];
+        foreach ($possibles as $index => $possible) {
+            if ($possible["kicker1"] === $best_kicker1) {
+                $best[$index] = $possible;
+            }
+        }
+        return $best;
+    }
+    public static function toString(array $combos): string
+    {
+        $best = self::best(self::possibles($combos));
+        foreach ($best as $combo) return $combo["display"];
+    }
+}
+
+class StraightFlush
+{
+    public static function is(array $combos): bool
+    {
+        if ((count($combos) === 1) && count($combos[0]) === 2) return false;
+        return count(self::possibles($combos)) > 0;
+    }
+    public static function possibles(array $combos): array
+    {
+        $possibles = [];
+        foreach ($combos as $index => $combo) {
+            $straight_string = "";
+            foreach ($combo as $card) {
+                $straight_string .= $card->getRank()->display();
+            }
+            $flush_string = "";
+            foreach ($combo as $card) {
+                $flush_string .= $card->getSuit()->display();
+            }
+            $flush = false;
+            if ($flush_string == "ccccc") $flush = true;
+            if ($flush_string == "ddddd") $flush = true;
+            if ($flush_string == "hhhhh") $flush = true;
+            if ($flush_string == "sssss") $flush = true;
+            $straight = false;
+            if ($straight_string == "2345A") $straight = true;
+            if ($straight_string == "23456") $straight = true;
+            if ($straight_string == "34567") $straight = true;
+            if ($straight_string == "45678") $straight = true;
+            if ($straight_string == "56789") $straight = true;
+            if ($straight_string == "6789T") $straight = true;
+            if ($straight_string == "789TJ") $straight = true;
+            if ($straight_string == "89TJQ") $straight = true;
+            if ($straight_string == "9TJQK") $straight = true;
+            if ($straight_string == "TJQKA") $straight = true;
+            if ($flush && $straight) $possibles[$index] = [
+                "hand" => $combo,
+                "kicker_rank" => $combo[4]->getRank()->numeric()
+            ];
+        }
+        return $possibles;
+    }
+    public static function best(array $possibles): array
+    {
+        if (count($possibles) === 0) return [];
+        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
+        $best_kicker = 0;
+        foreach ($possibles as $possible) {
+            if ($possible["kicker_rank"] > $best_kicker) {
+                $best_kicker = $possible["kicker_rank"];
+            }
+        }
+        $best = [];
+        foreach ($possibles as $index => $possible) {
+            if ($possible["kicker_rank"] === $best_kicker) {
+                $best[$index] = $possible;
+            }
+        }
+        return $best;
+    }
+    public static function toString(array $combos): string
+    {
+        $best = self::best(self::possibles($combos));
+        foreach ($best as $hand) {
+            $hand = $hand["hand"];
+            $high_card = $hand[4]->getRank()->display_long();
+            $suit = $hand[4]->getSuit()->display_long();
+            if ($high_card === "Ace") {
+                return "ROYAL FLUSH of $suit [" . implode("] [", $hand) . "]";
+            }
+            return "$high_card high STRAIGHT FLUSH of $suit [" . implode("] [", $hand) . "]";
+        }
     }
 }
 
@@ -862,435 +1291,6 @@ class TwoPair
         $best = [];
         foreach ($possibles as $index => $possible) {
             if ($possible["main1"] === $best_main1 && $possible["main2"] === $best_main2 && $possible["kicker"] === $best_kicker) {
-                $best[$index] = $possible;
-            }
-        }
-        return $best;
-    }
-    public static function toString(array $combos): string
-    {
-        $best = self::best(self::possibles($combos));
-        foreach ($best as $combo) return $combo["display"];
-    }
-}
-
-class Flush
-{
-    public static function is(array $combos): bool
-    {
-        if ((count($combos) === 1) && count($combos[0]) === 2) return false;
-        return count(self::possibles($combos)) > 0;
-    }
-    public static function possibles(array $combos): array
-    {
-        $possibles = [];
-        foreach ($combos as $index => $combo) {
-            $flush_string = "";
-            foreach ($combo as $card) {
-                $flush_string .= $card->getSuit()->display();
-            }
-            $flush = false;
-            if ($flush_string == "ccccc") $flush = true;
-            if ($flush_string == "ddddd") $flush = true;
-            if ($flush_string == "hhhhh") $flush = true;
-            if ($flush_string == "sssss") $flush = true;
-            if ($flush) $possibles[$index] = [
-                "hand" => $combo,
-                "kicker1" => $combo[4]->getRank()->numeric(),
-                "kicker2" => $combo[3]->getRank()->numeric(),
-                "kicker3" => $combo[2]->getRank()->numeric(),
-                "kicker4" => $combo[1]->getRank()->numeric(),
-                "kicker5" => $combo[0]->getRank()->numeric(),
-                "display" => $combo[4]->getRank()->display_long() . " High FLUSH [" . implode("] [", $combo) . "]"
-            ];
-        }
-        return $possibles;
-    }
-    public static function best(array $possibles): array
-    {
-        if (count($possibles) === 0) return [];
-        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
-        $best_kicker1 = 0;
-        $best_kicker2 = 0;
-        $best_kicker3 = 0;
-        $best_kicker4 = 0;
-        $best_kicker5 = 0;
-        foreach ($possibles as $possible) {
-            if ($possible["kicker1"] > $best_kicker1) {
-                $best_kicker1 = $possible["kicker1"];
-                $best_kicker2 = $possible["kicker2"];
-                $best_kicker3 = $possible["kicker3"];
-                $best_kicker4 = $possible["kicker4"];
-                $best_kicker5 = $possible["kicker5"];
-            }
-            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] > $best_kicker2) {
-                $best_kicker2 = $possible["kicker2"];
-                $best_kicker3 = $possible["kicker3"];
-                $best_kicker4 = $possible["kicker4"];
-                $best_kicker5 = $possible["kicker5"];
-            }
-            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] > $best_kicker3) {
-                $best_kicker3 = $possible["kicker3"];
-                $best_kicker4 = $possible["kicker4"];
-                $best_kicker5 = $possible["kicker5"];
-            }
-            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] > $best_kicker4) {
-                $best_kicker4 = $possible["kicker4"];
-                $best_kicker5 = $possible["kicker5"];
-            }
-            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] === $best_kicker4 && $possible["kicker5"] > $best_kicker5) {
-                $best_kicker5 = $possible["kicker5"];
-            }
-        }
-        $best = [];
-        foreach ($possibles as $index => $possible) {
-            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] === $best_kicker4 && $possible["kicker5"] === $best_kicker5) {
-                $best[$index] = $possible;
-            }
-        }
-        return $best;
-    }
-    public static function toString(array $combos): string
-    {
-        $best = self::best(self::possibles($combos));
-        foreach ($best as $combo) return $combo["display"];
-    }
-}
-
-class Straight
-{
-    public static function is(array $combos): bool
-    {
-        if ((count($combos) === 1) && count($combos[0]) === 2) return false;
-        return count(self::possibles($combos)) > 0;
-    }
-    public static function possibles(array $combos): array
-    {
-        $possibles = [];
-        foreach ($combos as $index => $combo) {
-            $straight_string = "";
-            foreach ($combo as $card) {
-                $straight_string .= $card->getRank()->display();
-            }
-            $flush = false;
-            $straight = false;
-            if ($straight_string == "2345A") $straight = true;
-            if ($straight_string == "23456") $straight = true;
-            if ($straight_string == "34567") $straight = true;
-            if ($straight_string == "45678") $straight = true;
-            if ($straight_string == "56789") $straight = true;
-            if ($straight_string == "6789T") $straight = true;
-            if ($straight_string == "789TJ") $straight = true;
-            if ($straight_string == "89TJQ") $straight = true;
-            if ($straight_string == "9TJQK") $straight = true;
-            if ($straight_string == "TJQKA") $straight = true;
-            if ($flush && $straight) $possibles[$index] = [
-                "hand" => $combo,
-                "kicker1" => $combo[4]->getRank()->numeric(),
-                "display" => $combo[4]->getRank()->display_long() . " High STRAIGHT [" . implode("] [", $combo) . "]"
-            ];
-        }
-        return $possibles;
-    }
-    public static function best(array $possibles): array
-    {
-        if (count($possibles) === 0) return [];
-        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
-        $best_kicker1 = 0;
-        foreach ($possibles as $possible) {
-            if ($possible["kicker1"] > $best_kicker1) {
-                $best_kicker1 = $possible["kicker1"];
-            }
-        }
-        $best = [];
-        foreach ($possibles as $index => $possible) {
-            if ($possible["kicker1"] === $best_kicker1) {
-                $best[$index] = $possible;
-            }
-        }
-        return $best;
-    }
-    public static function toString(array $combos): string
-    {
-        $best = self::best(self::possibles($combos));
-        foreach ($best as $combo) return $combo["display"];
-    }
-}
-
-class FourofaKind
-{
-    public static function is(array $combos): bool
-    {
-        if ((count($combos) === 1) && count($combos[0]) === 2) return false;
-        return count(self::possibles($combos)) > 0;
-    }
-    public static function possibles(array $combos): array
-    {
-        $possibles = [];
-        foreach ($combos as $index => $combo) {
-            $fok_string = "";
-            foreach ($combo as $card) {
-                $fok_string .= $card->getRank()->display();
-            }
-            if ($fok_string[0] === $fok_string[1] && $fok_string[1] === $fok_string[2] && $fok_string[2] === $fok_string[3]) {
-                $possibles[$index] = [
-                    "hand" => $combo,
-                    "main_rank" => $combo[0]->getRank()->numeric(),
-                    "kicker_rank" => $combo[4]->getRank()->numeric(),
-                    "display" => "FOUR-OF-A-KIND " . $combo[0]->getRank()->display_long() . "s (" . $combo[4]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
-                ];
-            }
-            if ($fok_string[1] === $fok_string[2] && $fok_string[2] === $fok_string[3] && $fok_string[3] === $fok_string[4]) {
-                $possibles[$index] = [
-                    "hand" => $combo,
-                    "main_rank" => $combo[1]->getRank()->numeric(),
-                    "kicker_rank" => $combo[0]->getRank()->numeric(),
-                    "display" => "FOUR-OF-A-KIND " . $combo[1]->getRank()->display_long() . "s (" . $combo[0]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
-                ];
-            }
-        }
-        return $possibles;
-    }
-    public static function best(array $possibles): array
-    {
-        if (count($possibles) === 0) return [];
-        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
-        $best_main = 0;
-        $best_kicker = 0;
-        foreach ($possibles as $possible) {
-            if ($possible["main_rank"] > $best_main) {
-                $best_main = $possible["main_rank"];
-                $best_kicker = $possible["kicker_rank"];
-            }
-            if ($possible["main_rank"] === $best_main && $possible["kicker_rank"] > $best_kicker) {
-                $best_kicker = $possible["kicker_rank"];
-            }
-        }
-        $best = [];
-        foreach ($possibles as $index => $possible) {
-            if ($possible["main_rank"] === $best_main && $possible["kicker_rank"] === $best_kicker) {
-                $best[$index] = $possible;
-            }
-        }
-        return $best;
-    }
-    public static function toString(array $combos): string
-    {
-        $best = self::best(self::possibles($combos));
-        foreach ($best as $combo) return $combo["display"];
-    }
-}
-
-class StraightFlush
-{
-    public static function is(array $combos): bool
-    {
-        if ((count($combos) === 1) && count($combos[0]) === 2) return false;
-        return count(self::possibles($combos)) > 0;
-    }
-    public static function possibles(array $combos): array
-    {
-        $possibles = [];
-        foreach ($combos as $index => $combo) {
-            $straight_string = "";
-            foreach ($combo as $card) {
-                $straight_string .= $card->getRank()->display();
-            }
-            $flush_string = "";
-            foreach ($combo as $card) {
-                $flush_string .= $card->getSuit()->display();
-            }
-            $flush = false;
-            if ($flush_string == "ccccc") $flush = true;
-            if ($flush_string == "ddddd") $flush = true;
-            if ($flush_string == "hhhhh") $flush = true;
-            if ($flush_string == "sssss") $flush = true;
-            $straight = false;
-            if ($straight_string == "2345A") $straight = true;
-            if ($straight_string == "23456") $straight = true;
-            if ($straight_string == "34567") $straight = true;
-            if ($straight_string == "45678") $straight = true;
-            if ($straight_string == "56789") $straight = true;
-            if ($straight_string == "6789T") $straight = true;
-            if ($straight_string == "789TJ") $straight = true;
-            if ($straight_string == "89TJQ") $straight = true;
-            if ($straight_string == "9TJQK") $straight = true;
-            if ($straight_string == "TJQKA") $straight = true;
-            if ($flush && $straight) $possibles[$index] = [
-                "hand" => $combo,
-                "kicker_rank" => $combo[4]->getRank()->numeric()
-            ];
-        }
-        return $possibles;
-    }
-    public static function best(array $possibles): array
-    {
-        if (count($possibles) === 0) return [];
-        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
-        $best_kicker = 0;
-        foreach ($possibles as $possible) {
-            if ($possible["kicker_rank"] > $best_kicker) {
-                $best_kicker = $possible["kicker_rank"];
-            }
-        }
-        $best = [];
-        foreach ($possibles as $index => $possible) {
-            if ($possible["kicker_rank"] === $best_kicker) {
-                $best[$index] = $possible;
-            }
-        }
-        return $best;
-    }
-    public static function toString(array $combos): string
-    {
-        $best = self::best(self::possibles($combos));
-        foreach ($best as $hand) {
-            $hand = $hand["hand"];
-            $high_card = $hand[4]->getRank()->display_long();
-            $suit = $hand[4]->getSuit()->display_long();
-            if ($high_card === "Ace") {
-                return "ROYAL FLUSH of $suit [" . implode("] [", $hand) . "]";
-            }
-            return "$high_card high STRAIGHT FLUSH of $suit [" . implode("] [", $hand) . "]";
-        }
-    }
-}
-
-class FullHouse
-{
-    public static function is(array $combos): bool
-    {
-        if ((count($combos) === 1) && count($combos[0]) === 2) return false;
-        return count(self::possibles($combos)) > 0;
-    }
-    public static function possibles(array $combos): array
-    {
-        $possibles = [];
-        foreach ($combos as $combo) {
-            $fh_string = "";
-            foreach ($combo as $index => $card) {
-                $fh_string .= $card->getRank()->display();
-            }
-            if ($fh_string[0] === $fh_string[1] && $fh_string[1] === $fh_string[2] && $fh_string[3] === $fh_string[4]) {
-                $possibles[$index] = [
-                    "hand" => $combo,
-                    "main_rank" => $combo[0]->getRank()->numeric(),
-                    "kicker_rank" => $combo[4]->getRank()->numeric(),
-                    "display" => "FULL HOUSE " . $combo[0]->getRank()->display_long() . "s of " . $combo[4]->getRank()->display_long() . "s [" . implode("] [", $combo) . "]"
-                ];
-            }
-            if ($fh_string[0] === $fh_string[1] && $fh_string[2] === $fh_string[3] && $fh_string[3] === $fh_string[4]) {
-                $possibles[$index] = [
-                    "hand" => $combo,
-                    "main_rank" => $combo[4]->getRank()->numeric(),
-                    "kicker_rank" => $combo[0]->getRank()->numeric(),
-                    "display" => "FULL HOUSE " . $combo[4]->getRank()->display_long() . "s of " . $combo[0]->getRank()->display_long() . "s [" . implode("] [", $combo) . "]"
-                ];
-            }
-        }
-        return $possibles;
-    }
-    public static function best(array $possibles): array
-    {
-        if (count($possibles) === 0) return [];
-        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
-        $best_main = 0;
-        $best_kicker = 0;
-        foreach ($possibles as $possible) {
-            if ($possible["main_rank"] > $best_main) {
-                $best_main = $possible["main_rank"];
-                $best_kicker = $possible["kicker_rank"];
-            }
-            if ($possible["main_rank"] === $best_main && $possible["kicker_rank"] > $best_kicker) {
-                $best_kicker = $possible["kicker_rank"];
-            }
-        }
-        $best = [];
-        foreach ($possibles as $index => $possible) {
-            if ($possible["main_rank"] === $best_main && $possible["kicker_rank"] === $best_kicker) {
-                $best[$index] = $possible;
-            }
-        }
-        return $best;
-    }
-    public static function toString(array $combos): string
-    {
-        $best = self::best(self::possibles($combos));
-        foreach ($best as $combo) return $combo["display"];
-    }
-}
-
-class HighCard
-{
-    public static function is(array $combos): bool
-    {
-                return true;
-    }
-    public static function possibles(array $combos): array
-    {
-        $possibles = [];
-        foreach ($combos as $index => $combo) {
-            if (count($combo) === 2) {
-                return [
-                    [
-                        "hand" => $combo,
-                        "kicker1" => $combo[1]->getRank()->numeric(),
-                        "kicker2" => $combo[0]->getRank()->numeric(),
-                        "display" => $combo[1]->getRank()->display_long() . " HIGH (" . $combo[0]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
-                    ]
-                ];
-            }
-            $possibles[$index] = [
-                "hand" => $combo,
-                "kicker1" => $combo[4]->getRank()->numeric(),
-                "kicker2" => $combo[3]->getRank()->numeric(),
-                "kicker3" => $combo[2]->getRank()->numeric(),
-                "kicker4" => $combo[1]->getRank()->numeric(),
-                "kicker5" => $combo[0]->getRank()->numeric(),
-                "display" => $combo[4]->getRank()->display_long() . " HIGH (" . $combo[3]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
-            ];
-        }
-        return $possibles;
-    }
-    public static function best(array $possibles): array
-    {
-        if (count($possibles) === 0) return [];
-        if (count($possibles) === 1) foreach ($possibles as $index => $possible) return [$index => $possible];
-        $best_kicker1 = 0;
-        $best_kicker2 = 0;
-        $best_kicker3 = 0;
-        $best_kicker4 = 0;
-        $best_kicker5 = 0;
-        foreach ($possibles as $possible) {
-            if ($possible["kicker1"] > $best_kicker1) {
-                $best_kicker1 = $possible["kicker1"];
-                $best_kicker2 = $possible["kicker2"];
-                $best_kicker3 = $possible["kicker3"];
-                $best_kicker4 = $possible["kicker4"];
-                $best_kicker5 = $possible["kicker5"];
-            }
-            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] > $best_kicker2) {
-                $best_kicker2 = $possible["kicker2"];
-                $best_kicker3 = $possible["kicker3"];
-                $best_kicker4 = $possible["kicker4"];
-                $best_kicker5 = $possible["kicker5"];
-            }
-            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] > $best_kicker3) {
-                $best_kicker3 = $possible["kicker3"];
-                $best_kicker4 = $possible["kicker4"];
-                $best_kicker5 = $possible["kicker5"];
-            }
-            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] > $best_kicker4) {
-                $best_kicker4 = $possible["kicker4"];
-                $best_kicker5 = $possible["kicker5"];
-            }
-            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] === $best_kicker4 && $possible["kicker5"] > $best_kicker5) {
-                $best_kicker5 = $possible["kicker5"];
-            }
-        }
-        $best = [];
-        foreach ($possibles as $index => $possible) {
-            if ($possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] === $best_kicker3 && $possible["kicker4"] === $best_kicker4 && $possible["kicker5"] === $best_kicker5) {
                 $best[$index] = $possible;
             }
         }
@@ -1485,7 +1485,7 @@ class Seat
             $system_message .= "Seat\tStack\tIn For\tName\tPocket\tHand\n";
             $system_message .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
             foreach ($options as $key => $option) {
-                $system_message .= " [" . strtoupper($key) . "] " . $option . "\t";
+                $system_message .= " [" . strtolower($key) . "] " . $option . "\t";
             }
             $messages[] = ["role" => "system", "content" => $system_message];
             $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . ", use the take_action function to make your move!"];
