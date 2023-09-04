@@ -247,8 +247,7 @@ class Table
         $max_contribution = max($contributions);
         $min_contribution = min($contributions);
         while ($max_contribution > $min_contribution) {
-            $this->pots[$current_pot]->good = false;
-            $this->pots[$current_pot + 1] = new Pot($current_pot + 1, false);
+            $this->pots[$current_pot + 1] = new Pot(0);
             $eligible = $this->pots[$current_pot]->eligible;
             $contributions = [];
             foreach ($eligible as $seat) {
@@ -258,8 +257,9 @@ class Table
             $min_contribution = min($contributions);
             foreach ($eligible as $seat_num => $seat) {
                 if ($seat["contributed"] > $min_contribution) {
-                    $this->pots[$current_pot + 1]->contribute($min_contribution, $seat["seat"]);
-                    $this->pots[$current_pot]->eligible[$seat_num]["contributed"] -= $min_contribution;
+                    $diff_amount = $seat["contributed"] - $min_contribution;
+                    $this->pots[$current_pot]->uncontribute($diff_amount, $seat["seat"]);
+                    $this->pots[$current_pot + 1]->contribute($diff_amount, $seat["seat"]);
                 }
             }
             $current_pot++;

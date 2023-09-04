@@ -1333,12 +1333,24 @@ class Pot
         if (!isset($this->eligible[$seat->seat_num])) $this->eligible[$seat->seat_num] = ["seat" => $seat, "contributed" => 0];
         $this->eligible[$seat->seat_num]["contributed"] += $amount;
     }
+    public function uncontribute(float $amount, Seat $seat)
+    {
+        $this->remove($amount);
+        $seat->get_stack()->add($amount);
+        $this->eligible[$seat->seat_num]["contributed"] -= $amount;
+        if ($this->eligible[$seat->seat_num]["contributed"] == 0) unset($this->eligible[$seat->seat_num]);
+    }
     public function payout(array $winner_indexes, string $display_name): array
     {
+        if ($this->amount == 0) return [];
         $results = [];
         $amount = round($this->amount / count($winner_indexes), 2);
         foreach ($winner_indexes as $index => $hand_toString) {
-            $results[] = $this->eligible[$index]["seat"]->get_player()->get_name() . " wins $" . number_format($amount, 2, '.', ',') . " from " . $display_name . " with " . $hand_toString;
+            $profit = $amount - $this->eligible[$index]["contributed"];
+            if ($profit > 0) $plus = "+";
+            if ($profit == 0) $plus = " ";
+            if ($profit < 0) $plus = "-";
+            $results[] = $this->eligible[$index]["seat"]->get_player()->get_name() . " wins $" . number_format($amount, 2, '.', ',') . " from " . $display_name . " with " . $hand_toString . " [$plus$" . number_format($profit, 2, '.', ',') . "]";
             $this->eligible[$index]["seat"]->get_stack()->add($amount);
             $this->remove($amount);
         }
@@ -1760,8 +1772,7 @@ class Table
         $max_contribution = max($contributions);
         $min_contribution = min($contributions);
         while ($max_contribution > $min_contribution) {
-            $this->pots[$current_pot]->good = false;
-            $this->pots[$current_pot + 1] = new Pot($current_pot + 1, false);
+            $this->pots[$current_pot + 1] = new Pot(0);
             $eligible = $this->pots[$current_pot]->eligible;
             $contributions = [];
             foreach ($eligible as $seat) {
@@ -1771,8 +1782,9 @@ class Table
             $min_contribution = min($contributions);
             foreach ($eligible as $seat_num => $seat) {
                 if ($seat["contributed"] > $min_contribution) {
-                    $this->pots[$current_pot + 1]->contribute($min_contribution, $seat["seat"]);
-                    $this->pots[$current_pot]->eligible[$seat_num]["contributed"] -= $min_contribution;
+                    $diff_amount = $seat["contributed"] - $min_contribution;
+                    $this->pots[$current_pot]->uncontribute($diff_amount, $seat["seat"]);
+                    $this->pots[$current_pot + 1]->contribute($diff_amount, $seat["seat"]);
                 }
             }
             $current_pot++;
@@ -2085,15 +2097,15 @@ $table = $casino->add_table(new Table([
     "seats" => 3,
 ]));
 $player1 = $casino->add_player(new Player("Russell", PlayerType::HUMAN));
-$casino->buy_chips($player1, 10000);
+$casino->buy_chips($player1, 1000);
 $table->seat_player($player1, $table->seats[1])->buy_chips(1000);
 $player2 = $casino->add_player(new Player("Lily", PlayerType::HUMAN));
-$casino->buy_chips($player2, 10000);
+$casino->buy_chips($player2, 1000);
 $table->seat_player($player2, $table->seats[2])->buy_chips(1000);
 $player3 = $casino->add_player(new Player("Stella", PlayerType::HUMAN));
-$casino->buy_chips($player3, 10000);
+$casino->buy_chips($player3, 1000);
 $table->seat_player($player3, $table->seats[3])->buy_chips(1000);
-for ($i = 0; $i < 3; $i++) {
+while (true) {
     $table->new_hand();
 }
 foreach ($table->seats as $seat) $seat->cash_out();

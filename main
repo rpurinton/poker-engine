@@ -16,18 +16,18 @@ $table = $casino->add_table(new Table([
 ]));
 
 $player1 = $casino->add_player(new Player("Russell", PlayerType::HUMAN));
-$casino->buy_chips($player1, 10000);
+$casino->buy_chips($player1, 1000);
 $table->seat_player($player1, $table->seats[1])->buy_chips(1000);
 
 $player2 = $casino->add_player(new Player("Lily", PlayerType::HUMAN));
-$casino->buy_chips($player2, 10000);
+$casino->buy_chips($player2, 1000);
 $table->seat_player($player2, $table->seats[2])->buy_chips(1000);
 
 $player3 = $casino->add_player(new Player("Stella", PlayerType::HUMAN));
-$casino->buy_chips($player3, 10000);
+$casino->buy_chips($player3, 1000);
 $table->seat_player($player3, $table->seats[3])->buy_chips(1000);
 
-for ($i = 0; $i < 3; $i++) {
+while (true) {
     $table->new_hand();
 }
 
