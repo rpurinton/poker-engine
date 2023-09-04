@@ -4,7 +4,7 @@ namespace RPurinton\poker;
 
 require_once(__DIR__ . '/Card.php');
 require_once(__DIR__ . '/Player.php');
-require_once(__DIR__ . '/SeatStatus.php');
+require_once(__DIR__ . '/Enums/SeatStatus.php');
 require_once(__DIR__ . '/Table.php');
 
 class Seat

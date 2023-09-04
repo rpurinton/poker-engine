@@ -2,12 +2,12 @@
 
 namespace RPurinton\poker;
 
-require_once(__DIR__ . '/TableStatus.php');
-require_once(__DIR__ . '/GameType.php');
+require_once(__DIR__ . '/Enums/TableStatus.php');
+require_once(__DIR__ . '/Enums/GameType.php');
+require_once(__DIR__ . '/Enums/Limit.php');
 require_once(__DIR__ . '/Seat.php');
 require_once(__DIR__ . '/Deck.php');
 require_once(__DIR__ . '/HandEvaluator.php');
-require_once(__DIR__ . '/Limit.php');
 
 class Table
 {

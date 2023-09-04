@@ -2,8 +2,8 @@
 
 namespace RPurinton\poker;
 
-require_once(__DIR__ . '/Suit.php');
-require_once(__DIR__ . '/Rank.php');
+require_once(__DIR__ . '/Enums/Suit.php');
+require_once(__DIR__ . '/Enums/Rank.php');
 
 class Card
 {

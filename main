@@ -26,7 +26,6 @@ foreach ($table->pots as $key => $pot) {
     $hands = [];
     foreach ($pot->eligible as $seat_num => $seat) {
         $hands[$seat_num] = $seat->cards;
+        $winning_seats = $table->HandEvaluator->get_winner_indexes($hands, $table->communityCards);
     }
-    $winning_seats = $table->HandEvaluator->get_winner_indexes($hands, $table->communityCards);
-    print_r($winning_seats);
 }

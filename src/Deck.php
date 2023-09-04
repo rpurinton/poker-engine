@@ -2,7 +2,7 @@
 
 namespace RPurinton\poker;
 
-require_once 'Card.php';
+require_once(__DIR__ . '/Card.php');
 
 class Deck
 {
