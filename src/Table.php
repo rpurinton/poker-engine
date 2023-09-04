@@ -38,12 +38,15 @@ class Table
     private $bet = 0;
     private float $last_raise_amount = 0;
 
+    public $encoder = null;
+
     public function __construct(array $config = [])
     {
         $this->config = array_merge($this->config, $config);
         $this->create_seats();
         $this->deck = new Deck();
         $this->HandEvaluator = new HandEvaluator($this->config["GameType"]);
+        $this->encoder = new \TikToken\Encoder;
     }
 
     public function get_seats(): array
@@ -88,7 +91,7 @@ class Table
 
     public function seat_player(Player $player, Seat $seat): Seat
     {
-        $seat->setPlayer($player);
+        $seat->set_player($player);
         $seat->set_status(SeatStatus::WAITING);
         $player->set_status(PlayerStatus::SEATED);
         return $seat;
@@ -96,13 +99,13 @@ class Table
 
     public function reserve_seat(Player $player, Seat $seat): Seat
     {
-        $seat->setPlayer($player);
+        $seat->set_player($player);
         $seat->set_status(SeatStatus::RESERVED);
         $player->set_status(PlayerStatus::SEAT_RESERVED);
         return $seat;
     }
 
-    public function new_hand(): void
+    public function new_hand(): bool
     {
         $this->hand_count++;
         $hand_count_display = number_format($this->hand_count, 0, '.', ',');
@@ -118,7 +121,7 @@ class Table
         $players_ready = $this->reset_seats();
         if ($players_ready < 2) {
             $this->chat("Not enough players to start a new hand.");
-            die();
+            return false;
         }
         $this->advance_button();
         $this->deck = new Deck();
@@ -128,7 +131,7 @@ class Table
         $this->deal_cards();
         $this->config['status'] = TableStatus::PREFLOP;
         $this->betting_round();
-        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        if ($this->config['status'] == TableStatus::HAND_OVER) return true;
         if ($this->config['status'] == TableStatus::ALLIN) {
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
@@ -145,7 +148,7 @@ class Table
             echo ("========================================\n");
             $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
             $this->showdown();
-            return;
+            return true;
         }
         $this->config['status'] = TableStatus::FLOP;
         $this->deck->deal_card($this->muck);
@@ -155,7 +158,7 @@ class Table
         echo ("========================================\n");
         $this->chat("Flop:\t[" . implode("] [", $this->communityCards) . "]");
         $this->betting_round();
-        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        if ($this->config['status'] == TableStatus::HAND_OVER) return true;
         if ($this->config['status'] == TableStatus::ALLIN) {
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
@@ -166,7 +169,7 @@ class Table
             echo ("========================================\n");
             $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
             $this->showdown();
-            return;
+            return true;
         }
         $this->config['status'] = TableStatus::TURN;
         $this->deck->deal_card($this->muck);
@@ -174,14 +177,14 @@ class Table
         echo ("========================================\n");
         $this->chat("Turn:\t[" . implode("] [", $this->communityCards) . "]");
         $this->betting_round();
-        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        if ($this->config['status'] == TableStatus::HAND_OVER) return true;
         if ($this->config['status'] == TableStatus::ALLIN) {
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
             echo ("========================================\n");
             $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
             $this->showdown();
-            return;
+            return true;
         }
         $this->config['status'] = TableStatus::RIVER;
         $this->deck->deal_card($this->muck);
@@ -190,9 +193,10 @@ class Table
         $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
         $this->action_position = $this->button_position;
         $this->betting_round();
-        if ($this->config['status'] == TableStatus::HAND_OVER) return;
+        if ($this->config['status'] == TableStatus::HAND_OVER) return true;
         $this->config['status'] = TableStatus::SHOWDOWN;
         $this->showdown();
+        return true;
     }
 
     private function showdown(): void
@@ -592,7 +596,19 @@ class Table
 
     public function chat($message)
     {
-        $this->chat_history[] = $message;
+        $this->chat_history[] = ["message" => $message, "tokens" => count($this->encoder->encode($message))];
         echo ($message . "\n");
+    }
+
+    public function get_chat_history(int $token_limit = 3596): array
+    {
+        $chat_history = [];
+        $token_count = 0;
+        foreach (array_reverse($this->chat_history) as $chat) {
+            $token_count += $chat["tokens"];
+            if ($token_count > $token_limit) break;
+            $chat_history[] = $chat["message"];
+        }
+        return $chat_history;
     }
 }
