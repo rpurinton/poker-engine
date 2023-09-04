@@ -90,16 +90,16 @@ class Pair
                 $best_kicker2 = $possible["kicker2"];
                 $best_kicker3 = $possible["kicker3"];
             }
-            if ($possible["main"] === $best_main && $possible["kicker1"] > $best_kicker1) {
+            if ($possible["main"] == $best_main && $possible["kicker1"] > $best_kicker1) {
                 $best_kicker1 = $possible["kicker1"];
                 $best_kicker2 = $possible["kicker2"];
                 $best_kicker3 = $possible["kicker3"];
             }
-            if ($possible["main"] === $best_main && $possible["kicker1"] === $best_kicker1 && $possible["kicker2"] > $best_kicker2) {
+            if ($possible["main"] == $best_main && $possible["kicker1"] === $best_kicker1 && $possible["kicker2"] > $best_kicker2) {
                 $best_kicker2 = $possible["kicker2"];
                 $best_kicker3 = $possible["kicker3"];
             }
-            if ($possible["main"] === $best_main && $possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] > $best_kicker3) {
+            if ($possible["main"] == $best_main && $possible["kicker1"] === $best_kicker1 && $possible["kicker2"] === $best_kicker2 && $possible["kicker3"] > $best_kicker3) {
                 $best_kicker3 = $possible["kicker3"];
             }
         }

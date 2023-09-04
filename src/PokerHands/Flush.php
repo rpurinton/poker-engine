@@ -30,7 +30,7 @@ class Flush
                 "kicker3" => $combo[2]->getRank()->numeric(),
                 "kicker4" => $combo[1]->getRank()->numeric(),
                 "kicker5" => $combo[0]->getRank()->numeric(),
-                "display" => $combo[4]->getRank()->display_long() . "high FLUSH [" . implode("] [", $combo) . "]"
+                "display" => $combo[4]->getRank()->display_long() . " high FLUSH [" . implode("] [", $combo) . "]"
             ];
         }
         return $possibles;

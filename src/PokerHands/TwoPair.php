@@ -24,7 +24,7 @@ class TwoPair
                     "main1" => $combo[2]->getRank()->numeric(),
                     "main2" => $combo[0]->getRank()->numeric(),
                     "kicker" => $combo[4]->getRank()->numeric(),
-                    "display" => "TWO-PAIR " . $combo[2]->getRank()->display_long() . "s over " . $combo[0]->getRank()->display_long() . " (" . $combo[4]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
+                    "display" => "TWO-PAIR " . $combo[2]->getRank()->display_long() . "s over " . $combo[0]->getRank()->display_long() . "s (" . $combo[4]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
                 ];
             }
             if ($tp_string[0] === $tp_string[1] && $tp_string[3] === $tp_string[4]) {
@@ -33,7 +33,7 @@ class TwoPair
                     "main1" => $combo[3]->getRank()->numeric(),
                     "main2" => $combo[0]->getRank()->numeric(),
                     "kicker" => $combo[2]->getRank()->numeric(),
-                    "display" => "TWO-PAIR " . $combo[3]->getRank()->display_long() . "s over " . $combo[0]->getRank()->display_long() . " (" . $combo[2]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
+                    "display" => "TWO-PAIR " . $combo[3]->getRank()->display_long() . "s over " . $combo[0]->getRank()->display_long() . "s (" . $combo[2]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
                 ];
             }
             if ($tp_string[1] === $tp_string[2] && $tp_string[3] === $tp_string[4]) {
@@ -42,7 +42,7 @@ class TwoPair
                     "main1" => $combo[3]->getRank()->numeric(),
                     "main2" => $combo[1]->getRank()->numeric(),
                     "kicker" => $combo[0]->getRank()->numeric(),
-                    "display" => "TWO-PAIR " . $combo[3]->getRank()->display_long() . "s over " . $combo[1]->getRank()->display_long() . " (" . $combo[0]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
+                    "display" => "TWO-PAIR " . $combo[3]->getRank()->display_long() . "s over " . $combo[1]->getRank()->display_long() . "s (" . $combo[0]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
                 ];
             }
         }
