@@ -166,7 +166,18 @@ class Seat
                     ],
                 ],
             ];
-            $response = $this->openai->chat()->create($prompt);
+            try {
+                $response = $this->openai->chat()->create($prompt);
+            } catch (\Exception $e) {
+                echo ("Error: " . $e->getMessage() . "\n");
+                continue;
+            } catch (\Throwable $e) {
+                echo ("Error: " . $e->getMessage() . "\n");
+                continue;
+            } catch (\Error $e) {
+                echo ("Error: " . $e->getMessage() . "\n");
+                continue;
+            }
             foreach ($response->choices as $result) {
                 if ($result->finishReason == "function_call") {
                     if ($result->message->functionCall->name == "take_action") {
