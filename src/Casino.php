@@ -22,12 +22,12 @@ class Casino
         return $this->name;
     }
 
-    public function getName(): string
+    public function get_name(): string
     {
         return $this->name;
     }
 
-    public function setName(string $name): void
+    public function set_name(string $name): void
     {
         if (strlen($name) < 3) {
             throw new \Exception('Name must be at least 3 characters.');
@@ -36,43 +36,46 @@ class Casino
         $this->name = $name;
     }
 
-    public function addTable(Table $table): Table
+    public function add_table(Table $table): Table
     {
         $this->tables[] = $table;
         return $table;
     }
 
-    public function addPlayer(Player $player): Player
+    public function add_player(Player $player): Player
     {
         $this->players[] = $player;
         return $player;
     }
 
-    public function depositToVault(float $amount): void
+    public function deposit(float $amount): void
     {
         $this->vault->add($amount);
     }
 
-    public function withdrawFromVault(float $amount): void
+    public function withdraw(float $amount): void
     {
         $this->vault->remove($amount);
     }
 
-    public function buyChips(Player $player, float $amount): void
+    public function buy_chips(Player $player, float $amount): void
     {
-        $this->depositToVault($amount);
-        $player->getBankroll()->add($amount);
+        $this->deposit($amount);
+        $player->get_bankroll()->add($amount);
     }
 
-    public function cashOut(Player $player): void
+    public function cash_out(Player $player): void
     {
-        $this->withdrawFromVault($player->getBankroll()->getAmount());
-        $player->getBankroll()->setAmount(0);
+        $amount = $player->get_bankroll()->get_amount();
+        $this->withdraw($player->get_bankroll()->get_amount());
+        $player->get_bankroll()->setAmount(0);
+        echo ($player->get_name() . " left with $" . number_format($amount, 2, '.', ',') . "\n");
     }
 
-    public function cashOutPartial(Player $player, float $amount): void
+    public function cash_out_partial(Player $player, float $amount): void
     {
-        $this->withdrawFromVault($amount);
-        $player->getBankroll()->remove($amount);
+        $this->withdraw($amount);
+        $player->get_bankroll()->remove($amount);
+        echo ($player->get_name() . " cashed out $" . number_format($amount, 2, '.', ',') . ", still has $" . $player->get_bankroll() . "\n");
     }
 }

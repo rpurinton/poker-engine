@@ -17,12 +17,12 @@ class Player
         $this->bankroll = new Pot(0);
     }
 
-    public function getName(): string
+    public function get_name(): string
     {
         return $this->name;
     }
 
-    public function getBankroll(): Pot
+    public function get_bankroll(): Pot
     {
         return $this->bankroll;
     }
@@ -32,7 +32,7 @@ class Player
         $this->bankroll = $bankroll;
     }
 
-    public function setStatus(PlayerStatus $status): void
+    public function set_status(PlayerStatus $status): void
     {
         $this->status = $status;
     }

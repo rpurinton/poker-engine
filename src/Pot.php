@@ -21,7 +21,7 @@ class Pot
         $this->amount -= round($amount, 2);
     }
 
-    public function getAmount(): float
+    public function get_amount(): float
     {
         return round($this->amount, 2);
     }
@@ -34,7 +34,7 @@ class Pot
     public function contribute(float $amount, Seat $seat)
     {
         $this->add($amount);
-        $seat->getStack()->remove($amount);
+        $seat->get_stack()->remove($amount);
         $this->eligible[$seat->seat_num] = $seat;
     }
 
@@ -43,15 +43,25 @@ class Pot
         $results = [];
         $amount = round($this->amount / count($winner_indexes), 2);
         foreach ($winner_indexes as $index) {
-            $results[] = $this->eligible[$index]->getPlayer()->getName() . " wins $" . number_format($amount, 2, '.', ',') . " from " . $display_name;
-            $this->eligible[$index]->getStack()->add($amount);
+            $results[] = $this->eligible[$index]->get_player()->get_name() . " wins $" . number_format($amount, 2, '.', ',') . " from " . $display_name;
+            $this->eligible[$index]->get_stack()->add($amount);
             $this->remove($amount);
         }
         if ($this->amount) {
-            $results[] = "The extra $" . number_format($this->amount, 2, '.', ',') . " goes to " . $this->eligible[$index]->getPlayer()->getName();
-            $this->eligible[$index]->getStack()->add($this->amount);
+            $results[] = "The extra $" . number_format($this->amount, 2, '.', ',') . " goes to " . $this->eligible[$index]->get_player()->get_name();
+            $this->eligible[$index]->get_stack()->add($this->amount);
             $this->remove($this->amount);
         }
+        return $results;
+    }
+
+    public function payout_last_player(string $display_name): array
+    {
+        $seat = array_pop($this->eligible);
+        $results = [];
+        $results[] = $seat->get_player()->get_name() . " wins $" . number_format($this->amount, 2, '.', ',') . " from " . $display_name;
+        $seat->get_stack()->add($this->amount);
+        $this->remove($this->amount);
         return $results;
     }
 

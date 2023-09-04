@@ -40,44 +40,44 @@ class Table
     public function __construct(array $config = [])
     {
         $this->config = array_merge($this->config, $config);
-        $this->createSeats();
+        $this->create_seats();
         $this->deck = new Deck();
         $this->HandEvaluator = new HandEvaluator($this->config["GameType"]);
     }
 
-    public function getSeats(): array
+    public function get_seats(): array
     {
         return $this->seats;
     }
 
-    public function getGameType(): ?GameType
+    public function get_GameType(): ?GameType
     {
         return $this->config['GameType'];
     }
 
-    public function setGameType(GameType $GameType): void
+    public function set_GameType(GameType $GameType): void
     {
         $this->config['GameType'] = $GameType;
     }
 
-    public function getConfig(): array
+    public function get_config(): array
     {
         return $this->config;
     }
 
-    public function setConfig(array $config): void
+    public function set_config(array $config): void
     {
         $this->config = array_merge($this->config, $config);
     }
 
-    private function createSeats(): void
+    private function create_seats(): void
     {
         for ($i = 0; $i < $this->config['seats']; $i++) {
-            $this->seats[$i] = new Seat($i);
+            $this->seats[$i] = new Seat($i, $this);
         }
     }
 
-    public function setStakes($minBuyIn, $maxBuyIn, $smallBlind, $bigBlind): void
+    public function set_stakes($minBuyIn, $maxBuyIn, $smallBlind, $bigBlind): void
     {
         $this->config['minBuyIn'] = $minBuyIn;
         $this->config['maxBuyIn'] = $maxBuyIn;
@@ -85,19 +85,19 @@ class Table
         $this->config['bigBlind'] = $bigBlind;
     }
 
-    public function seatPlayer(Player $player, Seat $seat): Seat
+    public function seat_player(Player $player, Seat $seat): Seat
     {
         $seat->setPlayer($player);
-        $seat->setStatus(SeatStatus::WAITING);
-        $player->setStatus(PlayerStatus::SEATED);
+        $seat->set_status(SeatStatus::WAITING);
+        $player->set_status(PlayerStatus::SEATED);
         return $seat;
     }
 
-    public function reserveSeat(Player $player, Seat $seat): Seat
+    public function reserve_seat(Player $player, Seat $seat): Seat
     {
         $seat->setPlayer($player);
-        $seat->setStatus(SeatStatus::RESERVED);
-        $player->setStatus(PlayerStatus::SEAT_RESERVED);
+        $seat->set_status(SeatStatus::RESERVED);
+        $player->set_status(PlayerStatus::SEAT_RESERVED);
         return $seat;
     }
 
@@ -108,7 +108,7 @@ class Table
         echo ("=============================================================\n");
         $this->chat("Starting hand #$hand_count_display of " . $this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
-        $players_ready = $this->resetSeats();
+        $players_ready = $this->reset_seats();
         if ($players_ready < 2) {
             $this->chat("Not enough players to start a new hand.");
             die();
@@ -118,38 +118,38 @@ class Table
         $this->pots = [];
         $this->pots[0] = new Pot(0, false);
         $this->bet = $this->config["bigBlind"];
-        $this->advanceButton();
+        $this->advance_button();
         $this->deck = new Deck();
-        $this->action_position = $this->postBlinds();
+        $this->action_position = $this->post_blinds();
         $this->deck->shuffle();
         $this->deck->cut();
-        $this->dealHoleCards();
+        $this->deal_cards();
         $this->config['status'] = TableStatus::PREFLOP;
-        $this->bettingRound();
+        $this->betting_round();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::FLOP;
-        $this->deck->dealCard($this->muck);
-        $this->deck->dealCard($this->communityCards);
-        $this->deck->dealCard($this->communityCards);
-        $this->deck->dealCard($this->communityCards);
+        $this->deck->deal_card($this->muck);
+        $this->deck->deal_card($this->communityCards);
+        $this->deck->deal_card($this->communityCards);
+        $this->deck->deal_card($this->communityCards);
         echo ("========================================\n");
         $this->chat("Flop:\t[" . implode("] [", $this->communityCards) . "]");
-        $this->bettingRound();
+        $this->betting_round();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::TURN;
-        $this->deck->dealCard($this->muck);
-        $this->deck->dealCard($this->communityCards);
+        $this->deck->deal_card($this->muck);
+        $this->deck->deal_card($this->communityCards);
         echo ("========================================\n");
         $this->chat("Turn:\t[" . implode("] [", $this->communityCards) . "]");
-        $this->bettingRound();
+        $this->betting_round();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::RIVER;
-        $this->deck->dealCard($this->muck);
-        $this->deck->dealCard($this->communityCards);
+        $this->deck->deal_card($this->muck);
+        $this->deck->deal_card($this->communityCards);
         echo ("========================================\n");
         $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
         $this->action_position = $this->button_position;
-        $this->bettingRound();
+        $this->betting_round();
         if ($this->config['status'] == TableStatus::HAND_OVER) return;
         $this->config['status'] = TableStatus::SHOWDOWN;
         $this->showdown();
@@ -170,21 +170,142 @@ class Table
         }
     }
 
-    private function bettingRound(): void
+    private function betting_round(): void
     {
         $this->action_position = $this->button_position;
         $this->pots[0]->good = false;
-        while (!$this->potsGood()) {
-            $action_order = $this->getActionOrder();
+        while (!$this->pot_is_good()) {
+            $action_order = $this->get_action_order();
             foreach ($action_order as $seat_number) {
+                if ($this->config['status'] == TableStatus::HAND_OVER) return;
                 $seat = $this->seats[$seat_number];
-                $seat->prompt($this);
+                $seat->prompt($this->get_available_actions($seat));
             }
-            $this->pots[0]->good = true;
         }
     }
 
-    private function potsGood(): bool
+    private function get_available_actions(Seat $seat): array
+    {
+        $available_actions = [];
+        if ($seat->bet < $this->bet) {
+            $available_actions["f"] = "Fold";
+            $bet_diff = number_format($this->bet - $seat->bet, 2, '.', ',');
+            $available_actions["c"] = "Call $" . $bet_diff;
+            if ($seat->get_stack()->get_amount() >= $this->bet) {
+                $available_actions["r"] = "Raise";
+                $available_actions["a"] = "All In for " . $seat->get_stack();
+            } else if ($seat->get_stack()->get_amount() < $this->bet) {
+                $available_actions["a"] = "All In for Less (" . $seat->get_stack() . ")";
+            }
+        } else {
+            $available_actions["c"] = "Check";
+            if ($seat->get_stack()->get_amount() >= $this->bet) {
+                $available_actions["b"] = "Bet";
+                $available_actions["a"] = "All In for " . $seat->get_stack();
+            }
+        }
+        return $available_actions;
+    }
+
+
+    public function fold(Seat $seat): void
+    {
+        $seat->set_status(SeatStatus::FOLDED);
+        $this->chat($seat->get_player()->get_name() . " folds.");
+        foreach ($this->pots as $pot) unset($pot->eligible[$seat->seat_num]);
+        // if all other players have folded, the hand is over
+        $active_players = 0;
+        foreach ($this->seats as $seat) {
+            if ($seat->get_status()->active()) $active_players++;
+        }
+        if ($active_players == 1) {
+            $this->config['status'] = TableStatus::HAND_OVER;
+            $this->chat("All other players have folded. Hand over.");
+            // payout the pot to the remaining player
+            foreach ($this->pots as $key => $pot) {
+                if ($key == 0) $pot_display = "the Main Pot";
+                else $pot_display = "Side Pot $key";
+                $results = $pot->payout_last_player($pot_display);
+                foreach ($results as $result) $this->chat($result);
+            }
+        }
+    }
+
+    public function check(Seat $seat): void
+    {
+        $seat->set_status(SeatStatus::CHECKED);
+        $this->chat($seat->get_player()->get_name() . " checks.");
+    }
+
+    public function call(Seat $seat): void
+    {
+        $diff_amount = $this->bet - $seat->bet;
+        if ($diff_amount == $seat->get_stack()->get_amount()) $seat->set_status(SeatStatus::ALLIN);
+        else $seat->set_status(SeatStatus::CALLED);
+        $seat->bet += $diff_amount;
+        $seat->total_bet += $diff_amount;
+        $this->pots[0]->contribute($this->bet - $seat->bet, $seat);
+        $this->chat($seat->get_player()->get_name() . " calls $" . $diff_amount);
+    }
+
+    public function bet(Seat $seat, $amount): void
+    {
+        $amount = min($amount, $seat->get_stack()->get_amount());
+        if ($amount == $seat->get_stack()->get_amount()) $seat->set_status(SeatStatus::ALLIN);
+        else $seat->set_status(SeatStatus::BET);
+        $seat->bet += $amount;
+        $seat->total_bet += $amount;
+        $this->pots[0]->contribute($amount, $seat);
+        $this->bet = $seat->bet;
+        $this->chat($seat->get_player()->get_name() . " bet $" . number_format($amount, 2, '.', ','));
+    }
+
+    public function raise(Seat $seat, $amount): void
+    {
+        $amount -= $seat->bet;
+        $amount = min($amount, $seat->get_stack()->get_amount());
+        if ($amount == $seat->get_stack()->get_amount()) $seat->set_status(SeatStatus::ALLIN);
+        else $seat->set_status(SeatStatus::RAISED);
+        $seat->bet += $amount;
+        $seat->total_bet += $amount;
+        $this->pots[0]->contribute($amount, $seat);
+        $this->bet = $seat->bet;
+        $this->chat($seat->get_player()->get_name() . " raises by $" . $amount . " to $" . $seat->bet);
+    }
+
+    public function all_in(Seat $seat): void
+    {
+        $seat->set_status(SeatStatus::ALLIN);
+        $amount = $seat->get_stack()->get_amount();
+        $seat->bet += $seat->get_stack()->get_amount();
+        $seat->total_bet += $seat->get_stack()->get_amount();
+        $this->pots[0]->contribute($seat->get_stack()->get_amount(), $seat);
+        $this->bet = $seat->bet;
+        $this->chat($seat->get_player()->get_name() . " is all in for $" . $seat->get_stack()->get_amount());
+    }
+
+    public function sit_out(Seat $seat): void
+    {
+        $this->fold($seat);
+        $seat->set_status(SeatStatus::SITOUT);
+        $this->chat($seat->get_player()->get_name() . " sits out.");
+    }
+
+    public function sit_in(Seat $seat): void
+    {
+        $seat->set_status(SeatStatus::PLAYING);
+        $this->chat($seat->get_player()->get_name() . " sits in.");
+    }
+
+    public function timeout(Seat $seat): void
+    {
+        $this->fold($seat);
+        $seat->set_status(SeatStatus::TIMEOUT);
+        $this->chat($seat->get_player()->get_name() . " times out.");
+    }
+
+
+    private function pot_is_good(): bool
     {
         foreach ($this->pots as $pot) {
             if (!$pot->good) return false;
@@ -192,7 +313,7 @@ class Table
         return true;
     }
 
-    private function getActionOrder(): array
+    private function get_action_order(): array
     {
         $action_order = [];
         $seat_number = $this->action_position;
@@ -200,23 +321,23 @@ class Table
             $seat_number++;
             if ($seat_number >= count($this->seats)) $seat_number = 0;
             $seat = $this->seats[$seat_number];
-            if (in_array($seat->getStatus(), [SeatStatus::PLAYING, SeatStatus::POSTED])) $action_order[] = $seat_number;
+            if ($seat->get_status()->active()) $action_order[] = $seat_number;
             if ($seat_number == $this->action_position) break;
         }
         return $action_order;
     }
 
-    private function dealHoleCards(): void
+    private function deal_cards(): void
     {
-        $deal_order = $this->getDealOrder();
+        $deal_order = $this->get_deal_order();
         for ($i = 0; $i < $this->config["GameType"]->num_hole_cards(); $i++) {
             foreach ($deal_order as $seat_number) {
-                $this->deck->dealCard($this->seats[$seat_number]->cards);
+                $this->deck->deal_card($this->seats[$seat_number]->cards);
             }
         }
     }
 
-    private function getDealOrder(): array
+    private function get_deal_order(): array
     {
         $deal_order = [];
         $seat_number = $this->button_position;
@@ -224,89 +345,114 @@ class Table
             $seat_number++;
             if ($seat_number >= count($this->seats)) $seat_number = 0;
             $seat = $this->seats[$seat_number];
-            if (in_array($seat->getStatus(), [SeatStatus::PLAYING, SeatStatus::POSTED])) $deal_order[] = $seat_number;
+            if (in_array($seat->get_status(), [SeatStatus::PLAYING, SeatStatus::POSTED])) $deal_order[] = $seat_number;
             if ($seat_number == $this->button_position) break;
         }
         return $deal_order;
     }
 
-    private function postBlinds(): int
+    private function post_blinds(): int
     {
-        return $this->postBigBlind($this->postSmallBlind());
+        return $this->post_big_blind($this->post_small_blind());
     }
 
-    private function postSmallBlind(): int
+    private function post_small_blind(): int
     {
         $small_blind_amount = $this->config['smallBlind'];
-        $small_blind_seat_number = $this->getNextActiveSeat($this->button_position);
+        $small_blind_seat_number = $this->get_next_active_seat($this->button_position);
         $small_blind_seat = $this->seats[$small_blind_seat_number];
-        while ($small_blind_seat->getStack()->getAmount() < $small_blind_amount) {
-            $small_blind_seat->setStatus(SeatStatus::SITOUT);
-            $small_blind_seat_number = $this->getNextActiveSeat($this->button_position);
+        while ($small_blind_seat->get_stack()->get_amount() < $small_blind_amount) {
+            $small_blind_seat->set_status(SeatStatus::SITOUT);
+            $small_blind_seat_number = $this->get_next_active_seat($this->button_position);
             $small_blind_seat = $this->seats[$small_blind_seat_number];
         }
         $this->pots[0]->contribute($small_blind_amount, $small_blind_seat);
-        $small_blind_seat->setStatus(SeatStatus::POSTED);
+        $small_blind_seat->set_status(SeatStatus::POSTED);
         $small_blind_seat->bet = $small_blind_amount;
-        $this->chat($small_blind_seat->getPlayer()->getName() . " posts the small blind of $" . $small_blind_amount);
+        $small_blind_seat->total_bet = $small_blind_amount;
+        $this->chat($small_blind_seat->get_player()->get_name() . " posts the small blind of $" . $small_blind_amount);
         return $small_blind_seat_number;
     }
 
-    private function postBigBlind($small_blind_seat_number): int
+    private function post_big_blind($small_blind_seat_number): int
     {
         $big_blind_amount = $this->config['bigBlind'];
-        $big_blind_seat_number = $this->getNextActiveSeat($small_blind_seat_number);
+        $big_blind_seat_number = $this->get_next_active_seat($small_blind_seat_number);
         $big_blind_seat = $this->seats[$big_blind_seat_number];
-        while ($big_blind_seat->getStack()->getAmount() < $big_blind_amount) {
-            $big_blind_seat->setStatus(SeatStatus::SITOUT);
-            $big_blind_seat_number = $this->getNextActiveSeat($this->button_position + 2);
+        while ($big_blind_seat->get_stack()->get_amount() < $big_blind_amount) {
+            $big_blind_seat->set_status(SeatStatus::SITOUT);
+            $big_blind_seat_number = $this->get_next_active_seat($this->button_position + 2);
             $big_blind_seat = $this->seats[$big_blind_seat_number];
         }
         $this->pots[0]->contribute($big_blind_amount, $big_blind_seat);
-        $big_blind_seat->setStatus(SeatStatus::POSTED);
+        $big_blind_seat->set_status(SeatStatus::POSTED);
         $big_blind_seat->bet = $big_blind_amount;
-        $this->chat($big_blind_seat->getPlayer()->getName() . " posts the big blind of $" . $big_blind_amount);
+        $big_blind_seat->total_bet = $big_blind_amount;
+        $this->chat($big_blind_seat->get_player()->get_name() . " posts the big blind of $" . $big_blind_amount);
         return $big_blind_seat_number;
     }
 
-    private function advanceButton(): void
+    private function advance_button(): void
     {
         // move the button to the next active seat
-        $this->button_position = $this->getNextActiveSeat($this->button_position);
-        $this->chat("The button is at seat " . $this->button_position . ". ({$this->seats[$this->button_position]->getPlayer()->getName()})");
+        $this->button_position = $this->get_next_active_seat($this->button_position);
+        $this->chat("The button is at seat " . $this->button_position . ". ({$this->seats[$this->button_position]->get_player()->get_name()})");
     }
 
-    private function getNextActiveSeat($seat): int
+    private function get_next_active_seat($seat): int
     {
         $seat++;
         if ($seat >= count($this->seats)) $seat = 0;
-        if (!in_array($this->seats[$seat]->getStatus(), [SeatStatus::PLAYING, SeatStatus::POSTED])) $seat = $this->getNextActiveSeat($seat);
+        if (!in_array($this->seats[$seat]->get_status(), [SeatStatus::PLAYING, SeatStatus::POSTED])) $seat = $this->get_next_active_seat($seat);
         return $seat;
     }
 
-    public function resetSeats(): int
+    public function reset_seats(): int
     {
         $players_ready = 0;
-        echo ("Seat\tBankroll\tChips In Play  \tPlayer Name\n");
+        echo ("Seat\tOff Table\tOn Table  \tName\tRace\tStatus\n");
         foreach ($this->seats as $seat_number => $seat) {
-            $seat->clearCards();
-            switch ($seat->getStatus()) {
+            $seat->clear_cards();
+            $seat->bet = 0;
+            $seat->total_bet = 0;
+            $seat->top_up($this->config['maxBuyIn']);
+            switch ($seat->get_status()) {
                 case SeatStatus::WAITING:
                 case SeatStatus::POSTED:
                 case SeatStatus::FOLDED:
                 case SeatStatus::PLAYING:
-                    if ($seat->getStack()->getAmount() < $this->config['bigBlind']) $seat->setStatus(SeatStatus::SITOUT);
+                    if ($seat->get_stack()->get_amount() < $this->config['bigBlind']) $seat->set_status(SeatStatus::SITOUT);
                     else {
-                        $seat->setStatus(SeatStatus::PLAYING);
-                        $seat->topUp($this->config['maxBuyIn']);
-                        $this->chat("$seat_number\t{$seat->getPlayer()->getBankRoll()}\t{$seat->getStack()}\t{$seat->getPlayer()->getName()}");
+                        $seat->set_status(SeatStatus::PLAYING);
+                        $this->chat("$seat_number\t" .
+                            "{$seat->get_player()->get_bankroll()}\t" .
+                            "{$seat->get_stack()}\t" .
+                            "{$seat->get_player()->get_name()}\t" .
+                            "{$seat->get_player()->type->display()}\t" .
+                            "{$seat->get_status()->display()}");
                         $players_ready++;
                     }
                     break;
                 case SeatStatus::TIMEOUT:
-                    $seat->setStatus(SeatStatus::SITOUT);
+                    $seat->set_status(SeatStatus::SITOUT);
+                    $this->chat("$seat_number\t" .
+                        "{$seat->get_player()->get_bankroll()}\t" .
+                        "{$seat->get_stack()}\t" .
+                        "{$seat->get_player()->get_name()}\t" .
+                        "{$seat->get_player()->type}\t" .
+                        "{$seat->get_status()->display()}");
                     break;
                 default:
+                    if (isset($seat->player)) {
+                        $this->chat("$seat_number\t" .
+                            "{$seat->get_player()->get_bankroll()}\t" .
+                            "{$seat->get_stack()}\t" .
+                            "{$seat->get_player()->get_name()}\t" .
+                            "{$seat->get_player()->type}\t" .
+                            "{$seat->get_status()->display()}");
+                    } else {
+                        $this->chat("$seat_number\t{$seat->get_status()->display()}");
+                    }
                     break;
             }
         }

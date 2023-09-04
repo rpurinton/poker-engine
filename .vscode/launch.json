@@ -11,6 +11,20 @@
             "port": 9003
         },
         {
+            "name": "Run main script",
+            "type": "php",
+            "request": "launch",
+            "program": "${workspaceRoot}/main",
+            "cwd": "${workspaceRoot}",
+            "runtimeArgs": [
+                "-dxdebug.start_with_request=yes"
+            ],
+            "env": {
+                "XDEBUG_MODE": "debug,develop",
+                "XDEBUG_CONFIG": "client_port=9003"
+            }
+        },
+        {
             "name": "Launch currently open script",
             "type": "php",
             "request": "launch",
@@ -25,24 +39,5 @@
                 "XDEBUG_CONFIG": "client_port=${port}"
             }
         },
-        {
-            "name": "Launch Built-in web server",
-            "type": "php",
-            "request": "launch",
-            "runtimeArgs": [
-                "-dxdebug.mode=debug",
-                "-dxdebug.start_with_request=yes",
-                "-S",
-                "localhost:0"
-            ],
-            "program": "",
-            "cwd": "${workspaceRoot}",
-            "port": 9003,
-            "serverReadyAction": {
-                "pattern": "Development Server \\(http://localhost:([0-9]+)\\) started",
-                "uriFormat": "http://localhost:%s",
-                "action": "openExternally"
-            }
-        }
     ]
 }

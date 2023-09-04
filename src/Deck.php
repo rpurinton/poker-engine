@@ -32,7 +32,7 @@ class Deck
         );
     }
 
-    public function dealCard(array &$destination): void
+    public function deal_card(array &$destination): void
     {
         $destination[] = array_pop($this->cards);
     }

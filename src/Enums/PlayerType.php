@@ -2,8 +2,16 @@
 
 namespace RPurinton\poker;
 
-enum PlayerType
+enum PlayerType: string
 {
-    case HUMAN;
-    case BOT;
+    case HUMAN = "Human";
+    case AI = "AI";
+
+    public function display(): string
+    {
+        return match ($this) {
+            PlayerType::HUMAN => "Human",
+            PlayerType::AI => "AI",
+        };
+    }
 }

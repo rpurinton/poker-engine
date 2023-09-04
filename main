@@ -9,17 +9,19 @@ echo ("poker (cli) v" . $build_info["number"] . " (built: " . $build_info["date"
 
 require_once('src/Casino.php');
 $casino = new Casino("My Casino");
-$table = $casino->addTable(new Table([
+$table = $casino->add_table(new Table([
     "id" => 1,
     "name" => "My Table",
-    "seats" => 2,
+    "seats" => 3,
 ]));
-$player1 = $casino->addPlayer(new Player("Russell", PlayerType::HUMAN));
-$casino->buyChips($player1, 10000);
-$table->seatPlayer($player1, $table->seats[0])->buyChips(1000);
-$player2 = $casino->addPlayer(new Player("Lily", PlayerType::BOT));
-$casino->buyChips($player2, 10000);
-$table->seatPlayer($player2, $table->seats[1])->buyChips(1000);
-for ($i = 0; $i < 1; $i++) {
+$player1 = $casino->add_player(new Player("Russell", PlayerType::HUMAN));
+$casino->buy_chips($player1, 10000);
+$table->seat_player($player1, $table->seats[0])->buy_chips(1000);
+$player2 = $casino->add_player(new Player("Lily", PlayerType::HUMAN));
+$casino->buy_chips($player2, 10000);
+$table->seat_player($player2, $table->seats[1])->buy_chips(1000);
+for ($i = 0; $i < 3; $i++) {
     $table->new_hand();
 }
+foreach ($table->seats as $seat) $seat->cash_out();
+foreach ($casino->players as $player) $casino->cash_out($player);
