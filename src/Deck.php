@@ -10,10 +10,10 @@ class Deck
 
     public function __construct()
     {
-        $this->cards = $this->createDeck();
+        $this->cards = $this->create_deck();
     }
 
-    public function getCards()
+    public function get_cards()
     {
         return $this->cards;
     }
@@ -37,7 +37,7 @@ class Deck
         $destination[] = array_pop($this->cards);
     }
 
-    private function createDeck()
+    private function create_deck()
     {
         $cards = [];
 
