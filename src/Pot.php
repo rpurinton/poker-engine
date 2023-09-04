@@ -35,6 +35,7 @@ class Pot
     {
         $this->add($amount);
         $seat->get_stack()->remove($amount);
+        if (!isset($this->eligible[$seat->seat_num])) $this->eligible[$seat->seat_num] = ["seat" => $seat, "contributed" => 0];
         $this->eligible[$seat->seat_num]["contributed"] += $amount;
     }
 

@@ -96,9 +96,9 @@ class Seat
     {
         switch ($this->player->type) {
             case PlayerType::HUMAN:
-                if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
-                else $this->table->check($this);
-                return;
+                // if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
+                // else $this->table->check($this);
+                // return;
                 echo ("=============================================================\n");
                 foreach ($this->table->pots as $key => $pot) {
                     if ($key == 0) $pot_display_name = "Main Pot";
@@ -111,7 +111,7 @@ class Seat
                     echo (" [" . strtoupper($key) . "] " . $option . "\t");
                 }
                 echo (" [T] Chat\n");
-                echo (": ");
+                echo ($this->player->get_name() . ": ");
                 $valid = false;
                 readline_callback_handler_install('', function () {
                 });
@@ -127,10 +127,10 @@ class Seat
                             $handle = fopen("php://stdin", "r");
                             $message = trim(fgets($handle));
                             fclose($handle);
-                            $this->table->chat($this->player->get_name() . " said: " . $message);
+                            if ($message != "") $this->table->chat($this->player->get_name() . " said: " . $message);
                             readline_callback_handler_install('', function () {
                             });
-                            echo (": ");
+                            echo ($this->player->get_name() . ": ");
                         }
                         if (array_key_exists($input, $options)) {
                             $valid = true;
@@ -149,19 +149,25 @@ class Seat
                         $this->table->fold($this);
                         break;
                     case "r":
-                        echo ("Raise amount: ");
-                        $handle = fopen("php://stdin", "r");
-                        $amount = (float)fgets($handle);
-                        fclose($handle);
-                        echo ("\n");
+                        $amount = 0;
+                        while ($amount <= 0) {
+                            echo ("Raise amount: ");
+                            $handle = fopen("php://stdin", "r");
+                            $amount = (float)fgets($handle);
+                            fclose($handle);
+                            if (!is_numeric($amount) || $amount <= 0) echo ("Invalid amount, Please try again...\n");
+                        }
                         $this->table->raise($this, $amount);
                         break;
                     case "b":
-                        echo ("Bet amount: ");
-                        $handle = fopen("php://stdin", "r");
-                        $amount = (float)fgets($handle);
-                        fclose($handle);
-                        echo ("\n");
+                        $amount = 0;
+                        while ($amount <= 0) {
+                            echo ("Bet amount: ");
+                            $handle = fopen("php://stdin", "r");
+                            $amount = (float)fgets($handle);
+                            fclose($handle);
+                            if (!is_numeric($amount) || $amount <= 0) echo ("Invalid amount, Please try again...\n");
+                        }
                         $this->table->bet($this, $amount);
                         break;
                     case "a":

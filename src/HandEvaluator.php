@@ -105,6 +105,7 @@ class HandEvaluator
         if (count($hands) < 2) foreach ($hands as $index => $hand) {
             return [$index => $hand];
         }
+        $contenders = [];
         foreach ($hands as $index => $hand) $contenders[$index] = $hand["best_combo"];
         switch ($high_rank) {
             case 8:

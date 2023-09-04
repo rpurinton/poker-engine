@@ -12,6 +12,7 @@ enum TableStatus: int
     case RIVER = 5;
     case SHOWDOWN = 6;
     case HAND_OVER = 7;
+    case ALLIN = 8;
 
     public function display(): string
     {
@@ -24,6 +25,7 @@ enum TableStatus: int
             TableStatus::RIVER => 'River',
             TableStatus::SHOWDOWN => 'Showdown',
             TableStatus::HAND_OVER => 'Hand over',
+            TableStatus::ALLIN => "Everyone's All-in",
         };
     }
 }
