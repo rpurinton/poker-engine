@@ -72,9 +72,13 @@ class Pot
     public function payout_last_player(string $display_name): array
     {
         $seat = array_pop($this->eligible);
+        $profit = $this->amount - $seat["contributed"];
+        if ($profit > 0) $plus = "+";
+        if ($profit == 0) $plus = " ";
+        if ($profit < 0) $plus = "-";
         $seat = $seat["seat"];
         $results = [];
-        $results[] = $seat->get_player()->get_name() . " wins $" . number_format($this->amount, 2, '.', ',') . " from " . $display_name;
+        $results[] = $seat->get_player()->get_name() . " wins $" . number_format($this->amount, 2, '.', ',') . " from " . $display_name . " [$plus$" . number_format($profit, 2, '.', ',') . "]";
         $seat->get_stack()->add($this->amount);
         $this->remove($this->amount);
         return $results;
