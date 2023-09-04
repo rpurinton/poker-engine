@@ -130,7 +130,7 @@ class Seat
             $system_message .= "Seat\tStack\tIn For\tName\tPocket\tHand\n";
             $system_message .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
             foreach ($options as $key => $option) {
-                $system_message .= " [" . strtoupper($key) . "] " . $option . "\t";
+                $system_message .= " [" . strtolower($key) . "] " . $option . "\t";
             }
             $messages[] = ["role" => "system", "content" => $system_message];
             $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . ", use the take_action function to make your move!"];
