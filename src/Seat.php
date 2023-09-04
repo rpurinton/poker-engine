@@ -9,7 +9,7 @@ require_once(__DIR__ . '/Table.php');
 
 class Seat
 {
-    private SeatStatus $status = SeatStatus::EMPTY;
+    public SeatStatus $status = SeatStatus::EMPTY;
     private ?Player $player = null;
     public array $cards = [];
     private Pot $stack;
@@ -96,6 +96,9 @@ class Seat
     {
         switch ($this->player->type) {
             case PlayerType::HUMAN:
+                if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
+                else $this->table->check($this);
+                return;
                 echo ("=============================================================\n");
                 foreach ($this->table->pots as $key => $pot) {
                     if ($key == 0) $pot_display_name = "Main Pot";
@@ -105,9 +108,9 @@ class Seat
                 echo ("Seat\tStack\tIn For\tName\tPocket\tHand\n");
                 echo ($this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n");
                 foreach ($options as $key => $option) {
-                    echo (" [" . strtoupper($key) . "] " . $option . "\n");
+                    echo (" [" . strtoupper($key) . "] " . $option . "\t");
                 }
-                echo (" [T] Type in table chat\n");
+                echo (" [T] Chat\n");
                 echo (": ");
                 $valid = false;
                 readline_callback_handler_install('', function () {
@@ -174,6 +177,9 @@ class Seat
                 }
                 break;
             case PlayerType::AI:
+                if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
+                else $this->table->check($this);
+                return;
                 // todo add chatGPT API calls here
                 echo ($this->player->get_name() . "\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n");
                 break;

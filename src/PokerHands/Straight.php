@@ -13,7 +13,7 @@ class Straight
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             $straight_string = "";
             foreach ($combo as $card) {
                 $straight_string .= $card->getRank()->display();
@@ -30,10 +30,10 @@ class Straight
             if ($straight_string == "89TJQ") $straight = true;
             if ($straight_string == "9TJQK") $straight = true;
             if ($straight_string == "TJQKA") $straight = true;
-            if ($flush && $straight) $possibles[] = [
+            if ($flush && $straight) $possibles[$index] = [
                 "hand" => $combo,
                 "kicker1" => $combo[4]->getRank()->numeric(),
-                "display" => $combo[4]->getRank()->display_long() . "high STRAIGHT [" . implode("] [", $combo) . "]"
+                "display" => $combo[4]->getRank()->display_long() . " High STRAIGHT [" . implode("] [", $combo) . "]"
             ];
         }
         return $possibles;

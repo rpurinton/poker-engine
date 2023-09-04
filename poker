@@ -399,6 +399,7 @@ enum GameType: int
     }
 }
 
+use JetBrains\PhpStorm\Internal\ReturnTypeContract;
 class HandEvaluator
 {
     public function __construct(private GameType $GameType)
@@ -471,6 +472,7 @@ class HandEvaluator
         $high_rank = 0;
         foreach ($hands as $index => $hand) {
             $hands[$index]["combos"] = $this->get_combos_texas($hand, $communityCards);
+            $hands[$index]["display"] = $this->hand_toString($hand, $communityCards);
             $hands[$index]["rank"] = $this->hand_toRank($hands[$index]["combos"]);
             $hands[$index]["best_combo"] = $this->hand_get_best_combo2(($this->hand_get_best_combo1($hands[$index]["combos"])));
             if ($hands[$index]["rank"] > $high_rank) $high_rank = $hands[$index]["rank"];
@@ -478,7 +480,9 @@ class HandEvaluator
         foreach ($hands as $index => $hand) {
             if ($hand["rank"] < $high_rank) unset($hands[$index]);
         }
-        if (count($hands) < 2) return array_keys($hands);
+        if (count($hands) < 2) foreach ($hands as $index => $hand) {
+            return [$index => $hand];
+        }
         foreach ($hands as $index => $hand) $contenders[$index] = $hand["best_combo"];
         switch ($high_rank) {
             case 8:
@@ -508,7 +512,7 @@ class HandEvaluator
             default:
                 $best = HighCard::best(HighCard::possibles($contenders));
         }
-        return array_keys($best);
+        return $best;
     }
     private function get_combos_texas(array $holeCards, array $communityCards): array
     {
@@ -603,7 +607,7 @@ class Pair
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             if (count($combo) === 2) {
                 if ($combo[0]->getRank()->numeric() === $combo[1]->getRank()->numeric()) {
                     return [
@@ -620,7 +624,7 @@ class Pair
                 $pair_string .= $card->getRank()->display();
             }
             if ($pair_string[0] === $pair_string[1]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main" => $combo[0]->getRank()->numeric(),
                     "kicker1" => $combo[4]->getRank()->numeric(),
@@ -630,7 +634,7 @@ class Pair
                 ];
             }
             if ($pair_string[1] === $pair_string[2]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main" => $combo[1]->getRank()->numeric(),
                     "kicker1" => $combo[4]->getRank()->numeric(),
@@ -640,7 +644,7 @@ class Pair
                 ];
             }
             if ($pair_string[2] === $pair_string[3]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main" => $combo[2]->getRank()->numeric(),
                     "kicker1" => $combo[4]->getRank()->numeric(),
@@ -650,7 +654,7 @@ class Pair
                 ];
             }
             if ($pair_string[3] === $pair_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main" => $combo[3]->getRank()->numeric(),
                     "kicker1" => $combo[2]->getRank()->numeric(),
@@ -715,13 +719,13 @@ class ThreeofaKind
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             $tok_string = "";
             foreach ($combo as $card) {
                 $tok_string .= $card->getRank()->display();
             }
             if ($tok_string[0] === $tok_string[1] && $tok_string[1] === $tok_string[2]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[0]->getRank()->numeric(),
                     "kicker1" => $combo[4]->getRank()->numeric(),
@@ -730,7 +734,7 @@ class ThreeofaKind
                 ];
             }
             if ($tok_string[1] === $tok_string[2] && $tok_string[2] === $tok_string[3]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[1]->getRank()->numeric(),
                     "kicker1" => $combo[4]->getRank()->numeric(),
@@ -739,7 +743,7 @@ class ThreeofaKind
                 ];
             }
             if ($tok_string[2] === $tok_string[3] && $tok_string[3] === $tok_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[2]->getRank()->numeric(),
                     "kicker1" => $combo[1]->getRank()->numeric(),
@@ -796,13 +800,13 @@ class TwoPair
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             $tp_string = "";
             foreach ($combo as $card) {
                 $tp_string .= $card->getRank()->display();
             }
             if ($tp_string[0] === $tp_string[1] && $tp_string[2] === $tp_string[3]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main1" => $combo[2]->getRank()->numeric(),
                     "main2" => $combo[0]->getRank()->numeric(),
@@ -811,7 +815,7 @@ class TwoPair
                 ];
             }
             if ($tp_string[0] === $tp_string[1] && $tp_string[3] === $tp_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main1" => $combo[3]->getRank()->numeric(),
                     "main2" => $combo[0]->getRank()->numeric(),
@@ -820,7 +824,7 @@ class TwoPair
                 ];
             }
             if ($tp_string[1] === $tp_string[2] && $tp_string[3] === $tp_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main1" => $combo[3]->getRank()->numeric(),
                     "main2" => $combo[1]->getRank()->numeric(),
@@ -877,7 +881,7 @@ class Flush
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             $flush_string = "";
             foreach ($combo as $card) {
                 $flush_string .= $card->getSuit()->display();
@@ -887,14 +891,14 @@ class Flush
             if ($flush_string == "ddddd") $flush = true;
             if ($flush_string == "hhhhh") $flush = true;
             if ($flush_string == "sssss") $flush = true;
-            if ($flush) $possibles[] = [
+            if ($flush) $possibles[$index] = [
                 "hand" => $combo,
                 "kicker1" => $combo[4]->getRank()->numeric(),
                 "kicker2" => $combo[3]->getRank()->numeric(),
                 "kicker3" => $combo[2]->getRank()->numeric(),
                 "kicker4" => $combo[1]->getRank()->numeric(),
                 "kicker5" => $combo[0]->getRank()->numeric(),
-                "display" => $combo[4]->getRank()->display_long() . " high FLUSH [" . implode("] [", $combo) . "]"
+                "display" => $combo[4]->getRank()->display_long() . " High FLUSH [" . implode("] [", $combo) . "]"
             ];
         }
         return $possibles;
@@ -960,7 +964,7 @@ class Straight
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             $straight_string = "";
             foreach ($combo as $card) {
                 $straight_string .= $card->getRank()->display();
@@ -977,10 +981,10 @@ class Straight
             if ($straight_string == "89TJQ") $straight = true;
             if ($straight_string == "9TJQK") $straight = true;
             if ($straight_string == "TJQKA") $straight = true;
-            if ($flush && $straight) $possibles[] = [
+            if ($flush && $straight) $possibles[$index] = [
                 "hand" => $combo,
                 "kicker1" => $combo[4]->getRank()->numeric(),
-                "display" => $combo[4]->getRank()->display_long() . "high STRAIGHT [" . implode("] [", $combo) . "]"
+                "display" => $combo[4]->getRank()->display_long() . " High STRAIGHT [" . implode("] [", $combo) . "]"
             ];
         }
         return $possibles;
@@ -1020,13 +1024,13 @@ class FourofaKind
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             $fok_string = "";
             foreach ($combo as $card) {
                 $fok_string .= $card->getRank()->display();
             }
             if ($fok_string[0] === $fok_string[1] && $fok_string[1] === $fok_string[2] && $fok_string[2] === $fok_string[3]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[0]->getRank()->numeric(),
                     "kicker_rank" => $combo[4]->getRank()->numeric(),
@@ -1034,7 +1038,7 @@ class FourofaKind
                 ];
             }
             if ($fok_string[1] === $fok_string[2] && $fok_string[2] === $fok_string[3] && $fok_string[3] === $fok_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[1]->getRank()->numeric(),
                     "kicker_rank" => $combo[0]->getRank()->numeric(),
@@ -1084,7 +1088,7 @@ class StraightFlush
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             $straight_string = "";
             foreach ($combo as $card) {
                 $straight_string .= $card->getRank()->display();
@@ -1109,7 +1113,7 @@ class StraightFlush
             if ($straight_string == "89TJQ") $straight = true;
             if ($straight_string == "9TJQK") $straight = true;
             if ($straight_string == "TJQKA") $straight = true;
-            if ($flush && $straight) $possibles[] = [
+            if ($flush && $straight) $possibles[$index] = [
                 "hand" => $combo,
                 "kicker_rank" => $combo[4]->getRank()->numeric()
             ];
@@ -1161,11 +1165,11 @@ class FullHouse
         $possibles = [];
         foreach ($combos as $combo) {
             $fh_string = "";
-            foreach ($combo as $card) {
+            foreach ($combo as $index => $card) {
                 $fh_string .= $card->getRank()->display();
             }
             if ($fh_string[0] === $fh_string[1] && $fh_string[1] === $fh_string[2] && $fh_string[3] === $fh_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[0]->getRank()->numeric(),
                     "kicker_rank" => $combo[4]->getRank()->numeric(),
@@ -1173,7 +1177,7 @@ class FullHouse
                 ];
             }
             if ($fh_string[0] === $fh_string[1] && $fh_string[2] === $fh_string[3] && $fh_string[3] === $fh_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[4]->getRank()->numeric(),
                     "kicker_rank" => $combo[0]->getRank()->numeric(),
@@ -1222,7 +1226,7 @@ class HighCard
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             if (count($combo) === 2) {
                 return [
                     [
@@ -1233,7 +1237,7 @@ class HighCard
                     ]
                 ];
             }
-            $possibles[] = [
+            $possibles[$index] = [
                 "hand" => $combo,
                 "kicker1" => $combo[4]->getRank()->numeric(),
                 "kicker2" => $combo[3]->getRank()->numeric(),
@@ -1323,20 +1327,20 @@ class Pot
     {
         $this->add($amount);
         $seat->get_stack()->remove($amount);
-        $this->eligible[$seat->seat_num] = $seat;
+        $this->eligible[$seat->seat_num]["contributed"] += $amount;
     }
     public function payout(array $winner_indexes, string $display_name): array
     {
         $results = [];
         $amount = round($this->amount / count($winner_indexes), 2);
-        foreach ($winner_indexes as $index) {
-            $results[] = $this->eligible[$index]->get_player()->get_name() . " wins $" . number_format($amount, 2, '.', ',') . " from " . $display_name;
-            $this->eligible[$index]->get_stack()->add($amount);
+        foreach ($winner_indexes as $index => $hand_toString) {
+            $results[] = $this->eligible[$index]["seat"]->get_player()->get_name() . " wins $" . number_format($amount, 2, '.', ',') . " from " . $display_name . " with " . $hand_toString;
+            $this->eligible[$index]["seat"]->get_stack()->add($amount);
             $this->remove($amount);
         }
         if ($this->amount) {
-            $results[] = "The extra $" . number_format($this->amount, 2, '.', ',') . " goes to " . $this->eligible[$index]->get_player()->get_name();
-            $this->eligible[$index]->get_stack()->add($this->amount);
+            $results[] = "The extra $" . number_format($this->amount, 2, '.', ',') . " goes to " . $this->eligible[$index]["seat"]->get_player()->get_name();
+            $this->eligible[$index]["seat"]->get_stack()->add($this->amount);
             $this->remove($this->amount);
         }
         return $results;
@@ -1344,6 +1348,7 @@ class Pot
     public function payout_last_player(string $display_name): array
     {
         $seat = array_pop($this->eligible);
+        $seat = $seat["seat"];
         $results = [];
         $results[] = $seat->get_player()->get_name() . " wins $" . number_format($this->amount, 2, '.', ',') . " from " . $display_name;
         $seat->get_stack()->add($this->amount);
@@ -1358,7 +1363,7 @@ class Pot
 
 class Seat
 {
-    private SeatStatus $status = SeatStatus::EMPTY;
+    public SeatStatus $status = SeatStatus::EMPTY;
     private ?Player $player = null;
     public array $cards = [];
     private Pot $stack;
@@ -1434,6 +1439,9 @@ class Seat
     {
         switch ($this->player->type) {
             case PlayerType::HUMAN:
+                if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
+                else $this->table->check($this);
+                return;
                 echo ("=============================================================\n");
                 foreach ($this->table->pots as $key => $pot) {
                     if ($key == 0) $pot_display_name = "Main Pot";
@@ -1443,9 +1451,9 @@ class Seat
                 echo ("Seat\tStack\tIn For\tName\tPocket\tHand\n");
                 echo ($this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n");
                 foreach ($options as $key => $option) {
-                    echo (" [" . strtoupper($key) . "] " . $option . "\n");
+                    echo (" [" . strtoupper($key) . "] " . $option . "\t");
                 }
-                echo (" [T] Type in table chat\n");
+                echo (" [T] Chat\n");
                 echo (": ");
                 $valid = false;
                 readline_callback_handler_install('', function () {
@@ -1512,6 +1520,9 @@ class Seat
                 }
                 break;
             case PlayerType::AI:
+                if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
+                else $this->table->check($this);
+                return;
                                 echo ($this->player->get_name() . "\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n");
                 break;
         }
@@ -1574,7 +1585,7 @@ class Table
     }
     private function create_seats(): void
     {
-        for ($i = 0; $i < $this->config['seats']; $i++) {
+        for ($i = 1; $i <= $this->config['seats']; $i++) {
             $this->seats[$i] = new Seat($i, $this);
         }
     }
@@ -1606,16 +1617,16 @@ class Table
         echo ("=============================================================\n");
         $this->chat("Starting hand #$hand_count_display of " . $this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
-        $players_ready = $this->reset_seats();
-        if ($players_ready < 2) {
-            $this->chat("Not enough players to start a new hand.");
-            die();
-        }
         $this->muck = [];
         $this->communityCards = [];
         $this->pots = [];
         $this->pots[0] = new Pot(0, false);
         $this->bet = $this->config["bigBlind"];
+        $players_ready = $this->reset_seats();
+        if ($players_ready < 2) {
+            $this->chat("Not enough players to start a new hand.");
+            die();
+        }
         $this->advance_button();
         $this->deck = new Deck();
         $this->action_position = $this->post_blinds();
@@ -1659,18 +1670,23 @@ class Table
             else $pot_display = "Side Pot $key";
             $hands = [];
             foreach ($pot->eligible as $seat_num => $seat) {
-                $hands[$seat_num] = $seat->cards;
+                $hands[$seat_num] = $seat["seat"]->cards;
             }
             $winning_seats = $this->HandEvaluator->get_winner_indexes($hands, $this->communityCards);
-            $results = $pot->payout($winning_seats, $pot_display);
+            $winners = [];
+            foreach ($winning_seats as $index => $best_hand) $winners[$index] = $best_hand["display"];
+            $results = $pot->payout($winners, $pot_display);
             foreach ($results as $result) $this->chat($result);
         }
     }
     private function betting_round(): void
     {
+        foreach ($this->get_deal_order() as $seat_number) {
+            $this->seats[$seat_number]->status = SeatStatus::UPCOMING_ACTION;
+        }
         $this->action_position = $this->button_position;
         $this->pots[0]->good = false;
-        while (!$this->pot_is_good()) {
+        while (!$this->all_pots_are_good()) {
             $action_order = $this->get_action_order();
             foreach ($action_order as $seat_number) {
                 if ($this->config['status'] == TableStatus::HAND_OVER) return;
@@ -1712,7 +1728,6 @@ class Table
         }
         if ($active_players == 1) {
             $this->config['status'] = TableStatus::HAND_OVER;
-            $this->chat("All other players have folded. Hand over.");
                         foreach ($this->pots as $key => $pot) {
                 if ($key == 0) $pot_display = "the Main Pot";
                 else $pot_display = "Side Pot $key";
@@ -1733,7 +1748,7 @@ class Table
         else $seat->set_status(SeatStatus::CALLED);
         $seat->bet += $diff_amount;
         $seat->total_bet += $diff_amount;
-        $this->pots[0]->contribute($this->bet - $seat->bet, $seat);
+                $this->pots[0]->contribute($diff_amount, $seat);
         $this->chat($seat->get_player()->get_name() . " calls $" . $diff_amount);
     }
     public function bet(Seat $seat, $amount): void
@@ -1743,7 +1758,7 @@ class Table
         else $seat->set_status(SeatStatus::BET);
         $seat->bet += $amount;
         $seat->total_bet += $amount;
-        $this->pots[0]->contribute($amount, $seat);
+                $this->pots[0]->contribute($amount, $seat);
         $this->bet = $seat->bet;
         $this->chat($seat->get_player()->get_name() . " bet $" . number_format($amount, 2, '.', ','));
     }
@@ -1755,7 +1770,7 @@ class Table
         else $seat->set_status(SeatStatus::RAISED);
         $seat->bet += $amount;
         $seat->total_bet += $amount;
-        $this->pots[0]->contribute($amount, $seat);
+                $this->pots[0]->contribute($amount, $seat);
         $this->bet = $seat->bet;
         $this->chat($seat->get_player()->get_name() . " raises by $" . $amount . " to $" . $seat->bet);
     }
@@ -1765,7 +1780,7 @@ class Table
         $amount = $seat->get_stack()->get_amount();
         $seat->bet += $seat->get_stack()->get_amount();
         $seat->total_bet += $seat->get_stack()->get_amount();
-        $this->pots[0]->contribute($seat->get_stack()->get_amount(), $seat);
+                $this->pots[0]->contribute($seat->get_stack()->get_amount(), $seat);
         $this->bet = $seat->bet;
         $this->chat($seat->get_player()->get_name() . " is all in for $" . $seat->get_stack()->get_amount());
     }
@@ -1786,10 +1801,19 @@ class Table
         $seat->set_status(SeatStatus::TIMEOUT);
         $this->chat($seat->get_player()->get_name() . " times out.");
     }
-    private function pot_is_good(): bool
+    private function all_pots_are_good(): bool
     {
+        foreach ($this->seats as $seat) {
+            if ($seat->status == SeatStatus::UPCOMING_ACTION) return false;
+        }
         foreach ($this->pots as $pot) {
-            if (!$pot->good) return false;
+                        $contributions = [];
+            foreach ($pot->eligible as $seat) {
+                $contributions[] = $seat["contributed"];
+            }
+            if (count(array_unique($contributions)) !== 1) {
+                return false;
+            }
         }
         return true;
     }
@@ -1799,9 +1823,12 @@ class Table
         $seat_number = $this->action_position;
         while (true) {
             $seat_number++;
-            if ($seat_number >= count($this->seats)) $seat_number = 0;
+            if ($seat_number >= count($this->seats)) $seat_number = 1;
             $seat = $this->seats[$seat_number];
-            if ($seat->get_status()->active()) $action_order[] = $seat_number;
+            if ($seat->get_status()->active()) {
+                $seat->status = SeatStatus::UPCOMING_ACTION;
+                $action_order[] = $seat_number;
+            }
             if ($seat_number == $this->action_position) break;
         }
         return $action_order;
@@ -1821,9 +1848,9 @@ class Table
         $seat_number = $this->button_position;
         while (true) {
             $seat_number++;
-            if ($seat_number >= count($this->seats)) $seat_number = 0;
+            if ($seat_number >= count($this->seats)) $seat_number = 1;
             $seat = $this->seats[$seat_number];
-            if (in_array($seat->get_status(), [SeatStatus::PLAYING, SeatStatus::POSTED])) $deal_order[] = $seat_number;
+            if ($seat->status->active()) $deal_order[] = $seat_number;
             if ($seat_number == $this->button_position) break;
         }
         return $deal_order;
@@ -1843,7 +1870,7 @@ class Table
             $small_blind_seat = $this->seats[$small_blind_seat_number];
         }
         $this->pots[0]->contribute($small_blind_amount, $small_blind_seat);
-        $small_blind_seat->set_status(SeatStatus::POSTED);
+        $small_blind_seat->set_status(SeatStatus::UPCOMING_ACTION);
         $small_blind_seat->bet = $small_blind_amount;
         $small_blind_seat->total_bet = $small_blind_amount;
         $this->chat($small_blind_seat->get_player()->get_name() . " posts the small blind of $" . $small_blind_amount);
@@ -1860,7 +1887,7 @@ class Table
             $big_blind_seat = $this->seats[$big_blind_seat_number];
         }
         $this->pots[0]->contribute($big_blind_amount, $big_blind_seat);
-        $big_blind_seat->set_status(SeatStatus::POSTED);
+        $big_blind_seat->set_status(SeatStatus::UPCOMING_ACTION);
         $big_blind_seat->bet = $big_blind_amount;
         $big_blind_seat->total_bet = $big_blind_amount;
         $this->chat($big_blind_seat->get_player()->get_name() . " posts the big blind of $" . $big_blind_amount);
@@ -1871,12 +1898,12 @@ class Table
                 $this->button_position = $this->get_next_active_seat($this->button_position);
         $this->chat("The button is at seat " . $this->button_position . ". ({$this->seats[$this->button_position]->get_player()->get_name()})");
     }
-    private function get_next_active_seat($seat): int
+    private function get_next_active_seat(int $seat_num): int
     {
-        $seat++;
-        if ($seat >= count($this->seats)) $seat = 0;
-        if (!in_array($this->seats[$seat]->get_status(), [SeatStatus::PLAYING, SeatStatus::POSTED])) $seat = $this->get_next_active_seat($seat);
-        return $seat;
+        $seat_num++;
+        if ($seat_num >= count($this->seats)) $seat_num = 1;
+        if (!$this->seats[$seat_num]->status->active()) $seat_num = $this->get_next_active_seat($seat_num);
+        return $seat_num;
     }
     public function reset_seats(): int
     {
@@ -1892,6 +1919,12 @@ class Table
                 case SeatStatus::POSTED:
                 case SeatStatus::FOLDED:
                 case SeatStatus::PLAYING:
+                case SeatStatus::ALLIN:
+                case SeatStatus::CALLED:
+                case SeatStatus::RAISED:
+                case SeatStatus::BET:
+                case SeatStatus::CHECKED:
+                case SeatStatus::UPCOMING_ACTION:
                     if ($seat->get_stack()->get_amount() < $this->config['bigBlind']) $seat->set_status(SeatStatus::SITOUT);
                     else {
                         $seat->set_status(SeatStatus::PLAYING);
@@ -1902,6 +1935,10 @@ class Table
                             "{$seat->get_player()->type->display()}\t" .
                             "{$seat->get_status()->display()}");
                         $players_ready++;
+                        $this->pots[0]->eligible[$seat_number] = [
+                            "seat" => $seat,
+                            "contributed" => 0
+                        ];
                     }
                     break;
                 case SeatStatus::TIMEOUT:
@@ -1946,10 +1983,10 @@ $table = $casino->add_table(new Table([
 ]));
 $player1 = $casino->add_player(new Player("Russell", PlayerType::HUMAN));
 $casino->buy_chips($player1, 10000);
-$table->seat_player($player1, $table->seats[0])->buy_chips(1000);
-$player2 = $casino->add_player(new Player("Lily", PlayerType::HUMAN));
+$table->seat_player($player1, $table->seats[1])->buy_chips(1000);
+$player2 = $casino->add_player(new Player("Lily", PlayerType::AI));
 $casino->buy_chips($player2, 10000);
-$table->seat_player($player2, $table->seats[1])->buy_chips(1000);
+$table->seat_player($player2, $table->seats[2])->buy_chips(1000);
 for ($i = 0; $i < 3; $i++) {
     $table->new_hand();
 }

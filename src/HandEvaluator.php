@@ -2,6 +2,8 @@
 
 namespace RPurinton\poker;
 
+use JetBrains\PhpStorm\Internal\ReturnTypeContract;
+
 require_once(__DIR__ . "/PokerHands/StraightFlush.php");
 require_once(__DIR__ . "/PokerHands/FourofaKind.php");
 require_once(__DIR__ . "/PokerHands/FullHouse.php");
@@ -92,6 +94,7 @@ class HandEvaluator
         $high_rank = 0;
         foreach ($hands as $index => $hand) {
             $hands[$index]["combos"] = $this->get_combos_texas($hand, $communityCards);
+            $hands[$index]["display"] = $this->hand_toString($hand, $communityCards);
             $hands[$index]["rank"] = $this->hand_toRank($hands[$index]["combos"]);
             $hands[$index]["best_combo"] = $this->hand_get_best_combo2(($this->hand_get_best_combo1($hands[$index]["combos"])));
             if ($hands[$index]["rank"] > $high_rank) $high_rank = $hands[$index]["rank"];
@@ -99,7 +102,9 @@ class HandEvaluator
         foreach ($hands as $index => $hand) {
             if ($hand["rank"] < $high_rank) unset($hands[$index]);
         }
-        if (count($hands) < 2) return array_keys($hands);
+        if (count($hands) < 2) foreach ($hands as $index => $hand) {
+            return [$index => $hand];
+        }
         foreach ($hands as $index => $hand) $contenders[$index] = $hand["best_combo"];
         switch ($high_rank) {
             case 8:
@@ -129,7 +134,7 @@ class HandEvaluator
             default:
                 $best = HighCard::best(HighCard::possibles($contenders));
         }
-        return array_keys($best);
+        return $best;
     }
 
     private function get_combos_texas(array $holeCards, array $communityCards): array

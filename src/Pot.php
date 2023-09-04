@@ -35,21 +35,21 @@ class Pot
     {
         $this->add($amount);
         $seat->get_stack()->remove($amount);
-        $this->eligible[$seat->seat_num] = $seat;
+        $this->eligible[$seat->seat_num]["contributed"] += $amount;
     }
 
     public function payout(array $winner_indexes, string $display_name): array
     {
         $results = [];
         $amount = round($this->amount / count($winner_indexes), 2);
-        foreach ($winner_indexes as $index) {
-            $results[] = $this->eligible[$index]->get_player()->get_name() . " wins $" . number_format($amount, 2, '.', ',') . " from " . $display_name;
-            $this->eligible[$index]->get_stack()->add($amount);
+        foreach ($winner_indexes as $index => $hand_toString) {
+            $results[] = $this->eligible[$index]["seat"]->get_player()->get_name() . " wins $" . number_format($amount, 2, '.', ',') . " from " . $display_name . " with " . $hand_toString;
+            $this->eligible[$index]["seat"]->get_stack()->add($amount);
             $this->remove($amount);
         }
         if ($this->amount) {
-            $results[] = "The extra $" . number_format($this->amount, 2, '.', ',') . " goes to " . $this->eligible[$index]->get_player()->get_name();
-            $this->eligible[$index]->get_stack()->add($this->amount);
+            $results[] = "The extra $" . number_format($this->amount, 2, '.', ',') . " goes to " . $this->eligible[$index]["seat"]->get_player()->get_name();
+            $this->eligible[$index]["seat"]->get_stack()->add($this->amount);
             $this->remove($this->amount);
         }
         return $results;
@@ -58,6 +58,7 @@ class Pot
     public function payout_last_player(string $display_name): array
     {
         $seat = array_pop($this->eligible);
+        $seat = $seat["seat"];
         $results = [];
         $results[] = $seat->get_player()->get_name() . " wins $" . number_format($this->amount, 2, '.', ',') . " from " . $display_name;
         $seat->get_stack()->add($this->amount);

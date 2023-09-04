@@ -13,13 +13,13 @@ class FourofaKind
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             $fok_string = "";
             foreach ($combo as $card) {
                 $fok_string .= $card->getRank()->display();
             }
             if ($fok_string[0] === $fok_string[1] && $fok_string[1] === $fok_string[2] && $fok_string[2] === $fok_string[3]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[0]->getRank()->numeric(),
                     "kicker_rank" => $combo[4]->getRank()->numeric(),
@@ -27,7 +27,7 @@ class FourofaKind
                 ];
             }
             if ($fok_string[1] === $fok_string[2] && $fok_string[2] === $fok_string[3] && $fok_string[3] === $fok_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[1]->getRank()->numeric(),
                     "kicker_rank" => $combo[0]->getRank()->numeric(),

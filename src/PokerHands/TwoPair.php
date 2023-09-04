@@ -13,13 +13,13 @@ class TwoPair
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             $tp_string = "";
             foreach ($combo as $card) {
                 $tp_string .= $card->getRank()->display();
             }
             if ($tp_string[0] === $tp_string[1] && $tp_string[2] === $tp_string[3]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main1" => $combo[2]->getRank()->numeric(),
                     "main2" => $combo[0]->getRank()->numeric(),
@@ -28,7 +28,7 @@ class TwoPair
                 ];
             }
             if ($tp_string[0] === $tp_string[1] && $tp_string[3] === $tp_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main1" => $combo[3]->getRank()->numeric(),
                     "main2" => $combo[0]->getRank()->numeric(),
@@ -37,7 +37,7 @@ class TwoPair
                 ];
             }
             if ($tp_string[1] === $tp_string[2] && $tp_string[3] === $tp_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main1" => $combo[3]->getRank()->numeric(),
                     "main2" => $combo[1]->getRank()->numeric(),

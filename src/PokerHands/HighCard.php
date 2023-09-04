@@ -13,7 +13,7 @@ class HighCard
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             if (count($combo) === 2) {
                 return [
                     [
@@ -24,7 +24,7 @@ class HighCard
                     ]
                 ];
             }
-            $possibles[] = [
+            $possibles[$index] = [
                 "hand" => $combo,
                 "kicker1" => $combo[4]->getRank()->numeric(),
                 "kicker2" => $combo[3]->getRank()->numeric(),

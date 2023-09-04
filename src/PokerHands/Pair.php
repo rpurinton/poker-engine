@@ -15,7 +15,7 @@ class Pair
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             if (count($combo) === 2) {
                 if ($combo[0]->getRank()->numeric() === $combo[1]->getRank()->numeric()) {
                     return [
@@ -32,7 +32,7 @@ class Pair
                 $pair_string .= $card->getRank()->display();
             }
             if ($pair_string[0] === $pair_string[1]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main" => $combo[0]->getRank()->numeric(),
                     "kicker1" => $combo[4]->getRank()->numeric(),
@@ -42,7 +42,7 @@ class Pair
                 ];
             }
             if ($pair_string[1] === $pair_string[2]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main" => $combo[1]->getRank()->numeric(),
                     "kicker1" => $combo[4]->getRank()->numeric(),
@@ -52,7 +52,7 @@ class Pair
                 ];
             }
             if ($pair_string[2] === $pair_string[3]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main" => $combo[2]->getRank()->numeric(),
                     "kicker1" => $combo[4]->getRank()->numeric(),
@@ -62,7 +62,7 @@ class Pair
                 ];
             }
             if ($pair_string[3] === $pair_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main" => $combo[3]->getRank()->numeric(),
                     "kicker1" => $combo[2]->getRank()->numeric(),

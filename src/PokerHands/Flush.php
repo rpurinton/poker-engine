@@ -13,7 +13,7 @@ class Flush
     public static function possibles(array $combos): array
     {
         $possibles = [];
-        foreach ($combos as $combo) {
+        foreach ($combos as $index => $combo) {
             $flush_string = "";
             foreach ($combo as $card) {
                 $flush_string .= $card->getSuit()->display();
@@ -23,14 +23,14 @@ class Flush
             if ($flush_string == "ddddd") $flush = true;
             if ($flush_string == "hhhhh") $flush = true;
             if ($flush_string == "sssss") $flush = true;
-            if ($flush) $possibles[] = [
+            if ($flush) $possibles[$index] = [
                 "hand" => $combo,
                 "kicker1" => $combo[4]->getRank()->numeric(),
                 "kicker2" => $combo[3]->getRank()->numeric(),
                 "kicker3" => $combo[2]->getRank()->numeric(),
                 "kicker4" => $combo[1]->getRank()->numeric(),
                 "kicker5" => $combo[0]->getRank()->numeric(),
-                "display" => $combo[4]->getRank()->display_long() . " high FLUSH [" . implode("] [", $combo) . "]"
+                "display" => $combo[4]->getRank()->display_long() . " High FLUSH [" . implode("] [", $combo) . "]"
             ];
         }
         return $possibles;

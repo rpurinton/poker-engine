@@ -15,11 +15,11 @@ class FullHouse
         $possibles = [];
         foreach ($combos as $combo) {
             $fh_string = "";
-            foreach ($combo as $card) {
+            foreach ($combo as $index => $card) {
                 $fh_string .= $card->getRank()->display();
             }
             if ($fh_string[0] === $fh_string[1] && $fh_string[1] === $fh_string[2] && $fh_string[3] === $fh_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[0]->getRank()->numeric(),
                     "kicker_rank" => $combo[4]->getRank()->numeric(),
@@ -27,7 +27,7 @@ class FullHouse
                 ];
             }
             if ($fh_string[0] === $fh_string[1] && $fh_string[2] === $fh_string[3] && $fh_string[3] === $fh_string[4]) {
-                $possibles[] = [
+                $possibles[$index] = [
                     "hand" => $combo,
                     "main_rank" => $combo[4]->getRank()->numeric(),
                     "kicker_rank" => $combo[0]->getRank()->numeric(),
