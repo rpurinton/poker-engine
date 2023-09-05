@@ -120,7 +120,7 @@ class Seat
         $answered = false;
         while (!$answered) {
             $model = "gpt-3.5-turbo-0613";
-            $system_message = implode("\n", $this->table->get_chat_history(2048));
+            $system_message = implode("\n", $this->table->get_chat_history(3072));
             $system_message .= "\n=============================================================\n";
             foreach ($this->table->pots as $key => $pot) {
                 if ($key == 0) $pot_display_name = "Main Pot";
