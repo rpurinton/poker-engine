@@ -172,7 +172,7 @@ class Seat
                                 ],
                                 'amount' => [
                                     'type' => 'string',
-                                    'description' => 'If betting or raising, the amount you want to raise increase the total bet by or to.',
+                                    'description' => 'If betting or raising, the amount you want to raise increase the total bet by or to. Numerical formatted (float value)',
                                 ],
                                 'chat_message' => [
                                     'type' => 'string',
@@ -197,14 +197,16 @@ class Seat
                 continue;
             }
             foreach ($response->choices as $result) {
+                if ($result->message->content != "") $this->table->chat($this->player->get_name() . " said: " . $result->message->content);
                 if ($result->finishReason == "function_call") {
                     if ($result->message->functionCall->name == "take_action") {
                         $json_string = $result->message->functionCall->arguments;
                         $data = json_decode($json_string, true);
+                        print_r($data);
                         if (isset($data["chat_message"]) && $data["chat_message"] != "") $this->table->chat($this->player->get_name() . " said: " . $data["chat_message"]);
                         if (array_key_exists($data["action"], $options)) {
                             $answered = true;
-                            $char = strtolower($data["action"]);
+                            $char = strtolower(substr($data["action"], 0, 1));
                             switch ($char) {
                                 case "c":
                                     if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
@@ -218,18 +220,9 @@ class Seat
                                     $amount = str_replace("$", "", $amount);
                                     $amount = (float)$amount;
                                     if (!is_numeric($amount) || $amount <= 0) {
-                                        echo ("AI returned invalid amount, Retrying...\n");
+                                        echo ("AI returned invalid amount (" . $data["amount"] . "), Retrying...\n");
                                         $answered = false;
                                     } else $this->table->raise_by($this, $amount);
-                                    break;
-                                case "r":
-                                    $amount = str_replace(",", "", $data["amount"]);
-                                    $amount = str_replace("$", "", $amount);
-                                    $amount = (float)$amount;
-                                    if (!is_numeric($amount) || $amount <= 0) {
-                                        echo ("AI returned invalid amount, Retrying...\n");
-                                        $answered = false;
-                                    } else $this->table->raise_to($this, $amount);
                                     break;
                                 case "a":
                                     $this->table->all_in($this);
@@ -311,17 +304,6 @@ class Seat
                     if (!is_numeric($amount) || $amount <= 0) echo ("Invalid amount, Please try again...\n");
                 }
                 $this->table->raise_by($this, $amount);
-                break;
-            case "r":
-                $amount = 0;
-                while ($amount <= 0) {
-                    echo ($options["r"] . ": ");
-                    $handle = fopen("php://stdin", "r");
-                    $amount = (float)fgets($handle);
-                    fclose($handle);
-                    if (!is_numeric($amount) || $amount <= 0) echo ("Invalid amount, Please try again...\n");
-                }
-                $this->table->raise_to($this, $amount);
                 break;
             case "a":
                 $this->table->all_in($this);

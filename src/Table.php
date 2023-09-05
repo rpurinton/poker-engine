@@ -35,7 +35,7 @@ class Table
     private int $action_position = 0;
     public array $chat_history = [];
     public $hand_count = 0;
-    private $bet = 0;
+    private float $bet = 0;
     private float $last_raise_amount = 0;
 
     public $encoder = null;
@@ -307,38 +307,57 @@ class Table
 
             if ($seat->get_stack()->get_amount() > $bet_diff) {
                 $max_opponent_stack = 0;
-
+                $max_opponent_bet = 0;
                 foreach ($this->seats as $other_seat) {
                     if ($other_seat->seat_num == $seat->seat_num) continue;
                     if ($other_seat->get_stack()->get_amount() > $max_opponent_stack) {
                         $max_opponent_stack = $other_seat->get_stack()->get_amount();
+                        $max_opponent_bet = $other_seat->bet;
                     }
                 }
-
                 $min_raise_amount_by = max($this->last_raise_amount, $this->config["bigBlind"]);
                 $min_raise_amount_to = $this->bet + $min_raise_amount_by;
+                $max_raise_amount_by = $seat->get_stack()->get_amount() - $bet_diff;
+                $max_raise_amount_to = $seat->get_stack()->get_amount() + $seat->bet;
+                $min_raise_amount_by = min($min_raise_amount_by, $max_opponent_stack - $max_opponent_bet);
+                $min_raise_amount_to = min($min_raise_amount_to, $max_opponent_stack);
+                $max_raise_amount_by = min($max_raise_amount_by, $max_opponent_stack - $max_opponent_bet);
+                $max_raise_amount_to = min($max_raise_amount_to, $max_opponent_stack);
                 $available_actions["c"] = "Call $" . number_format($bet_diff, 2, '.', ',');
-                $available_actions["b"] = "Bet/Raise BY <amount> (minimum: $" . number_format($min_raise_amount_by, 2, '.', ',') . ")";
-                $available_actions["r"] = "Bet/Raise TO <amount> (minimum: $" . number_format($min_raise_amount_to, 2, '.', ',') . ")";
-                $available_actions["a"] = "Raise All In for $" . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',') . "more";
+                if ($min_raise_amount_by < $max_opponent_stack) {
+                    $available_actions["b"] = "Bet/Raise BY <$" . number_format($min_raise_amount_by, 2, '.', ',') . " <=> $" . number_format($max_raise_amount_by, 2, '.', ',') . ">";
+                    $available_actions["a"] = "All-In for $" . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',') . ' more';
+                }
             } else if ($seat->get_stack()->get_amount() < $bet_diff) {
-                $available_actions["a"] = "Call All In for Less (" . $seat->get_stack() . ")";
+                $available_actions["c"] = "Call All In for Less (" . $seat->get_stack() . ")";
             } else if ($seat->get_stack()->get_amount() == $bet_diff) {
                 unset($available_actions["c"]);
-                $available_actions["a"] = "Call All In for " . $seat->get_stack();
+                $available_actions["c"] = "Call All In for " . $seat->get_stack();
             }
         } else if ($seat->bet == $this->bet) {
             $max_opponent_stack = 0;
+            $max_opponent_bet = 0;
             foreach ($this->seats as $other_seat) {
                 if ($other_seat->seat_num == $seat->seat_num) continue;
                 if ($other_seat->get_stack()->get_amount() > $max_opponent_stack) {
                     $max_opponent_stack = $other_seat->get_stack()->get_amount();
+                    $max_opponent_bet = $other_seat->bet;
                 }
             }
-
+            $bet_diff = $this->bet - $seat->bet;
+            $min_raise_amount_by = max($this->last_raise_amount, $this->config["bigBlind"]);
+            $min_raise_amount_to = $this->bet + $min_raise_amount_by;
+            $max_raise_amount_by = $seat->get_stack()->get_amount() - $bet_diff;
+            $max_raise_amount_to = $seat->get_stack()->get_amount() + $seat->bet;
+            $min_raise_amount_by = min($min_raise_amount_by, $max_opponent_stack - $max_opponent_bet);
+            $min_raise_amount_to = min($min_raise_amount_to, $max_opponent_stack);
+            $max_raise_amount_by = min($max_raise_amount_by, $max_opponent_stack - $max_opponent_bet);
+            $max_raise_amount_to = min($max_raise_amount_to, $max_opponent_stack);
             $available_actions["c"] = "Check";
-            $available_actions["r"] = "Bet/Raise TO <amount> (minimum: " . number_format($this->config["bigBlind"], 2, '.', ',') . ")";
-            $available_actions["a"] = "Raise All In for " . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
+            if ($min_raise_amount_by < $max_opponent_stack) {
+                $available_actions["b"] = "Bet/Raise BY <$" . number_format($min_raise_amount_by, 2, '.', ',') . " <=> $" . number_format($max_raise_amount_by, 2, '.', ',') . ">";
+                $available_actions["a"] = "All-In for " . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
+            }
         }
 
         return $available_actions;
@@ -384,45 +403,49 @@ class Table
     {
         echo ("\r                                                                                          \r");
         $diff_amount = $this->bet - $seat->bet;
-        if ($diff_amount == $seat->get_stack()->get_amount()) $seat->set_status(SeatStatus::ALLIN);
-        else $seat->set_status(SeatStatus::CALLED);
         $seat->bet += $diff_amount;
         $seat->total_bet += $diff_amount;
         $this->pots[count($this->pots) - 1]->contribute($diff_amount, $seat);
         $this->chat($seat->get_player()->get_name() . " calls $" . number_format($diff_amount, 2, '.', ','));
+        if ($seat->get_stack()->get_amount() === 0) {
+            $seat->set_status(SeatStatus::ALLIN);
+            $this->chat($seat->get_player()->get_name() . " is ALL-IN!");
+        } else $seat->set_status(SeatStatus::CALLED);
     }
 
     public function raise_by(Seat $seat, $amount): void
     {
         echo ("\r                                                                                          \r");
-        $amount = min($amount, $seat->get_stack()->get_amount());
-        $amount = max($amount, $this->last_raise_amount * 2);
-        $seat->bet += $amount;
-        $seat->total_bet += $amount;
-        $this->pots[count($this->pots) - 1]->contribute($amount, $seat);
-        $this->last_raise_amount = $seat->bet - $this->bet;
-        $this->bet = $seat->bet;
-        $this->chat($seat->get_player()->get_name() . " raises by $" . number_format($amount, 2, '.', ',') . " to $" . number_format($seat->bet, 2, '.', ','));
-        foreach ($this->seats as $other_seat) if ($other_seat->get_status()->active()) $other_seat->set_status(SeatStatus::UPCOMING_ACTION);
-        if ($seat->get_stack()->get_amount() === 0) $seat->set_status(SeatStatus::ALLIN);
-        else $seat->set_status(SeatStatus::RAISED);
-    }
 
-    public function raise_to(Seat $seat, $amount): void
-    {
-        echo ("\r                                                                                          \r");
-        $amount -= $seat->bet;
+        $max_opponent_stack = 0;
+        foreach ($this->seats as $other_seat) {
+            if ($other_seat->seat_num == $seat->seat_num) continue;
+            if ($other_seat->get_stack()->get_amount() > $max_opponent_stack) {
+                $max_opponent_stack = $other_seat->get_stack()->get_amount();
+            }
+        }
+
+        $min_raise_amount_by = max($this->last_raise_amount, $this->config["bigBlind"]);
+        $max_raise_amount_by = $seat->get_stack()->get_amount() - $this->bet - $seat->bet;
+        $max_raise_amount_by = min($max_raise_amount_by, $max_opponent_stack);
+        $amount = min($amount, $max_raise_amount_by);
+        $amount = max($amount, $min_raise_amount_by);
         $amount = min($amount, $seat->get_stack()->get_amount());
-        $amount = max($amount, $this->last_raise_amount * 2);
+        $amount = max($amount, $this->last_raise_amount);
+        $amount = $this->bet + $amount - $seat->bet;
         $seat->bet += $amount;
         $seat->total_bet += $amount;
         $this->pots[count($this->pots) - 1]->contribute($amount, $seat);
-        $this->last_raise_amount = $seat->bet - $this->bet;
+        $this->last_raise_amount = (float)$seat->bet - (float)$this->bet;
         $this->bet = $seat->bet;
-        $this->chat($seat->get_player()->get_name() . " raises by $" . number_format($amount, 2, '.', ',') . " to $" . number_format($seat->bet, 2, '.', ','));
-        foreach ($this->seats as $other_seat) if ($other_seat->get_status()->active()) $other_seat->set_status(SeatStatus::UPCOMING_ACTION);
-        if ($seat->get_stack()->get_amount() === 0) $seat->set_status(SeatStatus::ALLIN);
-        else $seat->set_status(SeatStatus::RAISED);
+        $this->chat($seat->get_player()->get_name() . " raises it to $" . number_format($seat->bet, 2, '.', ',') . " total.");
+        foreach ($this->seats as $other_seat) {
+            if ($other_seat->get_status()->active()) $other_seat->set_status(SeatStatus::UPCOMING_ACTION);
+        }
+        if ($seat->get_stack()->get_amount() === 0) {
+            $seat->set_status(SeatStatus::ALLIN);
+            $this->chat($seat->get_player()->get_name() . " is ALL-IN!");
+        } else $seat->set_status(SeatStatus::RAISED);
     }
 
     public function all_in(Seat $seat): void
@@ -589,21 +612,21 @@ class Table
                 case SeatStatus::BET:
                 case SeatStatus::CHECKED:
                 case SeatStatus::UPCOMING_ACTION:
-                    //if ($seat->get_stack()->get_amount() < $this->config['bigBlind']) $seat->set_status(SeatStatus::SITOUT);
-                    //else {
-                    $seat->set_status(SeatStatus::PLAYING);
-                    $this->chat("$seat_number\t" .
-                        "{$seat->get_player()->get_bankroll()}\t" .
-                        "{$seat->get_stack()}\t" .
-                        "{$seat->get_player()->get_name()}\t" .
-                        "{$seat->get_player()->type->display()}\t" .
-                        "{$seat->get_status()->display()}");
-                    $players_ready++;
-                    $this->pots[0]->eligible[$seat_number] = [
-                        "seat" => $seat,
-                        "contributed" => 0
-                    ];
-                    //}
+                    if ($seat->get_stack()->get_amount() == 0) $seat->set_status(SeatStatus::BUSTED);
+                    else {
+                        $seat->set_status(SeatStatus::PLAYING);
+                        $this->chat("$seat_number\t" .
+                            "{$seat->get_player()->get_bankroll()}\t" .
+                            "{$seat->get_stack()}\t" .
+                            "{$seat->get_player()->get_name()}\t" .
+                            "{$seat->get_player()->type->display()}\t" .
+                            "{$seat->get_status()->display()}");
+                        $players_ready++;
+                        $this->pots[0]->eligible[$seat_number] = [
+                            "seat" => $seat,
+                            "contributed" => 0
+                        ];
+                    }
                     break;
                 case SeatStatus::TIMEOUT:
                     $seat->set_status(SeatStatus::SITOUT);

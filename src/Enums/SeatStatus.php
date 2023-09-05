@@ -17,6 +17,7 @@ enum SeatStatus
     case BET;
     case RAISED;
     case ALLIN;
+    case BUSTED;
     case UPCOMING_ACTION;
 
     public function active(): bool
@@ -49,6 +50,7 @@ enum SeatStatus
             SeatStatus::BET => "Bet",
             SeatStatus::RAISED => "Raised",
             SeatStatus::ALLIN => "All-in",
+            SeatStatus::BUSTED => "Eliminated",
             SeatStatus::UPCOMING_ACTION => "Upcoming Action",
         };
     }
