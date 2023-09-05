@@ -109,8 +109,8 @@ class Table
     {
         $this->hand_count++;
         $hand_count_display = number_format($this->hand_count, 0, '.', ',');
-        echo ("\n\n\n=============================================================\n");
-        $this->chat("Starting hand #$hand_count_display of " . $this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
+        echo ("\n\n\n===========STARTING HAND #$hand_count_display========================\n");
+        $this->chat($this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $this->muck = [];
         $this->communityCards = [];
@@ -137,15 +137,15 @@ class Table
             $this->deck->deal_card($this->communityCards);
             $this->deck->deal_card($this->communityCards);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================FLOP===================\n");
             $this->chat("Flop:\t[" . implode("] [", $this->communityCards) . "]");
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================TURN===================\n");
             $this->chat("Turn:\t[" . implode("] [", $this->communityCards) . "]");
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================RIVER==================\n");
             $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
             $this->showdown();
             return true;
@@ -155,18 +155,18 @@ class Table
         $this->deck->deal_card($this->communityCards);
         $this->deck->deal_card($this->communityCards);
         $this->deck->deal_card($this->communityCards);
-        echo ("========================================\n");
+        echo ("================FLOP===================\n");
         $this->chat("Flop:\t[" . implode("] [", $this->communityCards) . "]");
         $this->betting_round();
         if ($this->config['status'] == TableStatus::HAND_OVER) return true;
         if ($this->config['status'] == TableStatus::ALLIN) {
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================TURN===================\n");
             $this->chat("Turn:\t[" . implode("] [", $this->communityCards) . "]");
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================RIVER==================\n");
             $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
             $this->showdown();
             return true;
@@ -174,14 +174,14 @@ class Table
         $this->config['status'] = TableStatus::TURN;
         $this->deck->deal_card($this->muck);
         $this->deck->deal_card($this->communityCards);
-        echo ("========================================\n");
+        echo ("================TURN===================\n");
         $this->chat("Turn:\t[" . implode("] [", $this->communityCards) . "]");
         $this->betting_round();
         if ($this->config['status'] == TableStatus::HAND_OVER) return true;
         if ($this->config['status'] == TableStatus::ALLIN) {
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================RIVER==================\n");
             $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
             $this->showdown();
             return true;
@@ -189,7 +189,7 @@ class Table
         $this->config['status'] = TableStatus::RIVER;
         $this->deck->deal_card($this->muck);
         $this->deck->deal_card($this->communityCards);
-        echo ("========================================\n");
+        echo ("================RIVER==================\n");
         $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
         $this->action_position = $this->button_position;
         $this->betting_round();
@@ -201,6 +201,7 @@ class Table
 
     private function showdown(): void
     {
+        echo ("=============SHOWDOWN!=============\n");
         foreach ($this->pots as $key => $pot) {
             if ($key == 0) $pot_display = "the Main Pot";
             else $pot_display = "Side Pot $key";

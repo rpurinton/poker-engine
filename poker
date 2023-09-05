@@ -617,7 +617,7 @@ class Pair
                         [
                             "hand" => $combo,
                             "main" => $combo[0]->getRank()->numeric(),
-                            "display" => "PAIR of " . $combo[0]->getRank()->display_long() . "s [" . implode("] [", $combo) . "]"
+                            "display" => "PAIR of " . $combo[0]->getRank()->display_long() . "s"
                         ]
                     ];
                 }
@@ -1236,7 +1236,7 @@ class HighCard
                         "hand" => $combo,
                         "kicker1" => $combo[1]->getRank()->numeric(),
                         "kicker2" => $combo[0]->getRank()->numeric(),
-                        "display" => $combo[1]->getRank()->display_long() . " HIGH (" . $combo[0]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
+                        "display" => $combo[1]->getRank()->display_long() . " HIGH (" . $combo[0]->getRank()->display_long() . " kicker)"
                     ]
                 ];
             }
@@ -1471,36 +1471,39 @@ class Seat
     }
     public function prompt_ai($options): void
     {
-                                echo ($this->player->get_name() . " [" . implode("] [", $this->cards) . "] " . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "...");
+                                echo ($this->player->get_name() . " [" . implode("] [", $this->cards) . "] " . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "...\n");
         $answered = false;
         while (!$answered) {
+            $messages = [];
             $model = "gpt-3.5-turbo-0613";
-            $system_message = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . " in a friendly sit-and-go home game with your co-workers at Discommand.com\n";
-            $system_message .= "Lily is the CEO, Adam is the Architect/CTO, Bella is the COO, Ursula is the CLO/GC, Finley is the CFO, Stella is Chief Security Officer, Derek is the MySQL DBA, Penelope is a PHP Developer, and Frank is the Project Manager.\n";
-            $system_message .= "Everyone starts with 1500 chips and the blinds start at $10/$20 and go up every 9 hands until $250/$500.\n";
-            $system_message .= "You are currently in the " . $this->table->hand_count . " hand of the tournament.\n";
-            $system_message .= "We have included the history of the table chat and the current state of the table below.\n";
-            $system_message .= "Everyone here (including you) are Expert level poker players employing perfect GTO strategy. (Game Theory Optimal)\n";
-            $system_message .= "Socializing and funny, friendly, flirty chat messages are highly encouraged and part of the fun of the game!\n";
-            $messages[] = ["role" => "system", "content" => $system_message];
-            $user_message = implode("\n", $this->table->get_chat_history(3072));
-            $user_message .= "\n=============================================================\n";
+            $system_message1 = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . " in a friendly sit-and-go home game with your co-workers at Discommand.com\n";
+            $system_message1 .= "Lily is the CEO, Adam is the Architect/CTO, Bella is the COO, Ursula is the CLO/GC, Finley is the CFO, Stella is Chief Security Officer, Derek is the MySQL DBA, Penelope is a PHP Developer, and Frank is the Project Manager.\n";
+            $system_message1 .= "Everyone starts with 1500 chips and the blinds start at $10/$20 and go up every 9 hands until $250/$500.\n";
+            $system_message1 .= "You are currently in the " . $this->table->hand_count . " hand of the tournament.\n";
+            $system_message1 .= "We have included the history of the table chat and the current state of the table below.\n";
+            $messages[] = ["role" => "system", "content" => $system_message1];
+            $user_message1 = implode("\n", $this->table->get_chat_history(3072));
+            $user_message1 .= "\n====================CURRENT POTS=====================\n";
             foreach ($this->table->pots as $key => $pot) {
                 if ($key == 0) $pot_display_name = "Main Pot";
                 else $pot_display_name = "Side Pot " . $key;
-                $user_message .= $pot_display_name . ": $pot\n";
+                $user_message1 .= $pot_display_name . ": $pot\n";
             }
-            $user_message .= "Seat\tStack\tIn For\tName\tPocket\tHand\n";
-            $user_message .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t [" . implode("] [", $this->cards) . "]\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
-            $messages = [["role" => "user", "content" => $user_message]];
-            $options_message = "";
-            foreach ($options as $key => $option) $options_message .= " [" . strtolower($key) . "] " . $option . "\t";
-            $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . ", use the take_action function to make your move!\n" . $options_message . "\n"];
+            $messages[] = ["role" => "user", "content" => $user_message1];
+            $system_message2 = "Welcome to the poker game! Get ready for an exciting round of Texas Hold'em. As you navigate through each hand, remember to carefully assess your hole cards and the community cards. Consider the available actions, such as checking, betting, calling, raising, and folding, as you make strategic decisions. The AI players will bring their unique playing styles and personalities to the table, adding depth and challenge to the game. Pay attention to their betting patterns, reactions, and dialogue prompts to gain insights into their strategies. Remember to keep your own poker face and stay focused. Good luck, and may the best hand win!\n";
+            $messages[] = ["role" => "system", "content" => $system_message2];
+            $user_message2 = "Current Action is on:\n";
+            $user_message2 .= "Seat\tStack\tIn For\tName\tPocket\tHand\n";
+            $user_message2 .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t [" . implode("] [", $this->cards) . "]\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
+            $messages[] = ["role" => "user", "content" => $user_message2];
+            $options_message = "Options: \n";
+            foreach ($options as $key => $option) $options_message .= "[" . strtolower($key) . "] " . $option . "\n";
+            $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . ", play smart!  use GTO to contemplate your best move in this specific scenario, then use the take_action function to make your move and write some fun chat!\n" . $options_message . "\n"];
             $prompt = [
                 "model" => $model,
                 "messages" => $messages,
-                "temperature" => 0.986,
-                "top_p" => 0.986,
+                "temperature" => 0.1,
+                "top_p" => 0.1,
                 "frequency_penalty" => 0,
                 "presence_penalty" => 0,
                 'functions' => [
@@ -1520,7 +1523,7 @@ class Seat
                                 ],
                                 'chat_message' => [
                                     'type' => 'string',
-                                    'description' => 'optional chat message to send to the table (playful fun good natured table banter) (fun part of the game!)',
+                                    'description' => 'continue the chat conversation... the chat message to send to the table (playful fun good natured table banter) (fun part of the game!)',
                                 ],
                             ],
                             'required' => ['action', 'amount', 'chat_message']
@@ -1771,8 +1774,8 @@ class Table
     {
         $this->hand_count++;
         $hand_count_display = number_format($this->hand_count, 0, '.', ',');
-        echo ("\n\n\n=============================================================\n");
-        $this->chat("Starting hand #$hand_count_display of " . $this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
+        echo ("\n\n\n===========STARTING HAND #$hand_count_display========================\n");
+        $this->chat($this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $this->muck = [];
         $this->communityCards = [];
@@ -1799,15 +1802,15 @@ class Table
             $this->deck->deal_card($this->communityCards);
             $this->deck->deal_card($this->communityCards);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================FLOP===================\n");
             $this->chat("Flop:\t[" . implode("] [", $this->communityCards) . "]");
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================TURN===================\n");
             $this->chat("Turn:\t[" . implode("] [", $this->communityCards) . "]");
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================RIVER==================\n");
             $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
             $this->showdown();
             return true;
@@ -1817,18 +1820,18 @@ class Table
         $this->deck->deal_card($this->communityCards);
         $this->deck->deal_card($this->communityCards);
         $this->deck->deal_card($this->communityCards);
-        echo ("========================================\n");
+        echo ("================FLOP===================\n");
         $this->chat("Flop:\t[" . implode("] [", $this->communityCards) . "]");
         $this->betting_round();
         if ($this->config['status'] == TableStatus::HAND_OVER) return true;
         if ($this->config['status'] == TableStatus::ALLIN) {
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================TURN===================\n");
             $this->chat("Turn:\t[" . implode("] [", $this->communityCards) . "]");
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================RIVER==================\n");
             $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
             $this->showdown();
             return true;
@@ -1836,14 +1839,14 @@ class Table
         $this->config['status'] = TableStatus::TURN;
         $this->deck->deal_card($this->muck);
         $this->deck->deal_card($this->communityCards);
-        echo ("========================================\n");
+        echo ("================TURN===================\n");
         $this->chat("Turn:\t[" . implode("] [", $this->communityCards) . "]");
         $this->betting_round();
         if ($this->config['status'] == TableStatus::HAND_OVER) return true;
         if ($this->config['status'] == TableStatus::ALLIN) {
             $this->deck->deal_card($this->muck);
             $this->deck->deal_card($this->communityCards);
-            echo ("========================================\n");
+            echo ("================RIVER==================\n");
             $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
             $this->showdown();
             return true;
@@ -1851,7 +1854,7 @@ class Table
         $this->config['status'] = TableStatus::RIVER;
         $this->deck->deal_card($this->muck);
         $this->deck->deal_card($this->communityCards);
-        echo ("========================================\n");
+        echo ("================RIVER==================\n");
         $this->chat("River:\t[" . implode("] [", $this->communityCards) . "]");
         $this->action_position = $this->button_position;
         $this->betting_round();
@@ -1862,6 +1865,7 @@ class Table
     }
     private function showdown(): void
     {
+        echo ("=============SHOWDOWN!=============\n");
         foreach ($this->pots as $key => $pot) {
             if ($key == 0) $pot_display = "the Main Pot";
             else $pot_display = "Side Pot $key";

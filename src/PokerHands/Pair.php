@@ -22,7 +22,7 @@ class Pair
                         [
                             "hand" => $combo,
                             "main" => $combo[0]->getRank()->numeric(),
-                            "display" => "PAIR of " . $combo[0]->getRank()->display_long() . "s [" . implode("] [", $combo) . "]"
+                            "display" => "PAIR of " . $combo[0]->getRank()->display_long() . "s"
                         ]
                     ];
                 }

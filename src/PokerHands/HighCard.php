@@ -20,7 +20,7 @@ class HighCard
                         "hand" => $combo,
                         "kicker1" => $combo[1]->getRank()->numeric(),
                         "kicker2" => $combo[0]->getRank()->numeric(),
-                        "display" => $combo[1]->getRank()->display_long() . " HIGH (" . $combo[0]->getRank()->display_long() . " kicker) [" . implode("] [", $combo) . "]"
+                        "display" => $combo[1]->getRank()->display_long() . " HIGH (" . $combo[0]->getRank()->display_long() . " kicker)"
                     ]
                 ];
             }
