@@ -1984,6 +1984,7 @@ class Table
                 }
                 $min_raise_amount_by = max($this->last_raise_amount, $this->config["bigBlind"]);
                 $min_raise_amount_to = $this->bet + $min_raise_amount_by;
+                $available_actions["c"] = "Call $" . number_format($bet_diff, 2, '.', ',');
                 $available_actions["b"] = "Bet/Raise BY <amount> (minimum: $" . number_format($min_raise_amount_by, 2, '.', ',') . ")";
                 $available_actions["r"] = "Bet/Raise TO <amount> (minimum: $" . number_format($min_raise_amount_to, 2, '.', ',') . ")";
                 $available_actions["a"] = "Raise All In for $" . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
@@ -2002,8 +2003,7 @@ class Table
                 }
             }
             $available_actions["c"] = "Check";
-            $available_actions["r_by"] = "Raise by <amount> (minimum: " . $this->config["bigBlind"] . ")";
-            $available_actions["r_to"] = "Raise to <amount> (maximum: " . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',') . ")";
+            $available_actions["r"] = "Bet/Raise TO <amount> (minimum: " . $this->config["bigBlind"] . ")";
             $available_actions["a"] = "Raise All In for " . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
         }
         return $available_actions;
