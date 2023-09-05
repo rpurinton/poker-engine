@@ -21,7 +21,7 @@ $player_names = [
     "Finley",
     "Stella",
     "Derek",
-    "Penelope",
+    "Max",
     "Frank"
 ];
 
@@ -45,7 +45,7 @@ $tournament_blinds = [
 $table = $casino->add_table(new Table([
     "id" => 1,
     "name" => "SnG 1",
-    "seats" => 9,
+    "seats" => 6,
     "minBuyIn" => 1500,
     "maxBuyIn" => 1500,
 ]));

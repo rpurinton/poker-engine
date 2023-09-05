@@ -122,18 +122,12 @@ class Seat
             $messages = [];
             $model = "gpt-3.5-turbo-0613";
             $system_message1 = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . " in a friendly sit-and-go home game with your co-workers at Discommand.com\n";
-            $system_message1 .= "Lily is the CEO, Adam is the Architect/CTO, Bella is the COO, Ursula is the CLO/GC, Finley is the CFO, Stella is Chief Security Officer, Derek is the MySQL DBA, Penelope is a PHP Developer, and Frank is the Project Manager.\n";
+            $system_message1 .= "Lily is the CEO, Adam is the Architect/CTO, Bella is the COO, Ursula is the CLO/GC, Finley is the CFO, Stella is Chief Security Officer, Derek is the MySQL DBA, Max is a Graphics Designer, and Frank is the Project Manager.\n";
             $system_message1 .= "Everyone starts with 1500 chips and the blinds start at $10/$20 and go up every 9 hands until $250/$500.\n";
             $system_message1 .= "You are currently in the " . $this->table->hand_count . " hand of the tournament.\n";
             $system_message1 .= "We have included the history of the table chat and the current state of the table below.\n";
             $messages[] = ["role" => "system", "content" => $system_message1];
             $user_message1 = implode("\n", $this->table->get_chat_history(3072));
-            $user_message1 .= "\n====================CURRENT POTS=====================\n";
-            foreach ($this->table->pots as $key => $pot) {
-                if ($key == 0) $pot_display_name = "Main Pot";
-                else $pot_display_name = "Side Pot " . $key;
-                $user_message1 .= $pot_display_name . ": $pot\n";
-            }
             $messages[] = ["role" => "user", "content" => $user_message1];
             $system_message2 = "Welcome to the poker game! Get ready for an exciting round of Texas Hold'em. As you navigate through each hand, remember to carefully assess your hole cards and the community cards. Consider the available actions, such as checking, betting, calling, raising, and folding, as you make strategic decisions. The AI players will bring their unique playing styles and personalities to the table, adding depth and challenge to the game. Pay attention to their betting patterns, reactions, and dialogue prompts to gain insights into their strategies. Remember to keep your own poker face and stay focused. Good luck, and may the best hand win!\n";
             $messages[] = ["role" => "system", "content" => $system_message2];
@@ -141,16 +135,17 @@ class Seat
             $user_message2 .= "Seat\tStack\tIn For\tName\tPocket\tHand\n";
             $user_message2 .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t [" . implode("] [", $this->cards) . "]\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
             $messages[] = ["role" => "user", "content" => $user_message2];
-            $options_message = "Options: \n";
+            $options_message = "";
             foreach ($options as $key => $option) $options_message .= "[" . strtolower($key) . "] " . $option . "\n";
-            $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . ", play smart!  use GTO to contemplate your best move in this specific scenario, then use the take_action function to make your move and write some fun chat!\n" . $options_message . "\n"];
+            echo ($options_message);
+            $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . ", play smart!  don't play stupid! use GTO to contemplate your best move in this specific scenario, then use the take_action function to make your move!" . $options_message . "\n"];
             $prompt = [
                 "model" => $model,
                 "messages" => $messages,
-                "temperature" => 0.1,
-                "top_p" => 0.1,
-                "frequency_penalty" => 0,
-                "presence_penalty" => 0,
+                "temperature" => 0.986,
+                "top_p" => 0.986,
+                "frequency_penalty" => 1,
+                "presence_penalty" => 1,
                 'functions' => [
                     [
                         'name' => 'take_action',
@@ -160,15 +155,15 @@ class Seat
                             'properties' => [
                                 'action' => [
                                     'type' => 'string',
-                                    'description' => 'a single lower letter representing the action you want to take (c, f, r, b, a, q)',
+                                    'description' => 'a single lower letter representing the action you want to take (c, f, r, a, q)',
                                 ],
                                 'amount' => [
                                     'type' => 'string',
-                                    'description' => 'If betting or raising, the amount you want to bet or raise, dont use $ or ,',
+                                    'description' => 'If betting or raising, the amount you want to raise increase the total bet by.',
                                 ],
                                 'chat_message' => [
                                     'type' => 'string',
-                                    'description' => 'continue the chat conversation... the chat message to send to the table (playful fun good natured table banter) (fun part of the game!)',
+                                    'description' => 'continue the chat conversation... the chat message to send to the table (playful fun good natured table banter) (fun part of the game!) (dont reapeat the same message over and over, be creative!)',
                                 ],
                             ],
                             'required' => ['action', 'amount', 'chat_message']
@@ -206,26 +201,13 @@ class Seat
                                     $this->table->fold($this);
                                     break;
                                 case "r":
-                                    $amount = 0;
-                                    while ($amount <= 0) {
-                                        $amount = (float)$data["amount"];
-                                        if (!is_numeric($amount) || $amount <= 0) {
-                                            echo ("AI returned invalid amount, Retrying...\n");
-                                            $answered = false;
-                                        }
-                                    }
-                                    $this->table->raise($this, $amount);
-                                    break;
-                                case "b":
-                                    $amount = 0;
-                                    while ($amount <= 0) {
-                                        $amount = (float)$data["amount"];
-                                        if (!is_numeric($amount) || $amount <= 0) {
-                                            echo ("Invalid amount, Please try again...\n");
-                                            $answered = false;
-                                        }
-                                    }
-                                    $this->table->bet($this, $amount);
+                                    $amount = str_replace(",", "", $data["amount"]);
+                                    $amount = str_replace("$", "", $amount);
+                                    $amount = (float)$amount;
+                                    if (!is_numeric($amount) || $amount <= 0) {
+                                        echo ("AI returned invalid amount, Retrying...\n");
+                                        $answered = false;
+                                    } else $this->table->raise($this, $amount);
                                     break;
                                 case "a":
                                     $this->table->all_in($this);
@@ -242,6 +224,7 @@ class Seat
                     }
                 }
             }
+            echo ("\n");
         }
     }
 
@@ -309,17 +292,6 @@ class Seat
                     if (!is_numeric($amount) || $amount <= 0) echo ("Invalid amount, Please try again...\n");
                 }
                 $this->table->raise($this, $amount);
-                break;
-            case "b":
-                $amount = 0;
-                while ($amount <= 0) {
-                    echo ("Bet amount: ");
-                    $handle = fopen("php://stdin", "r");
-                    $amount = (float)fgets($handle);
-                    fclose($handle);
-                    if (!is_numeric($amount) || $amount <= 0) echo ("Invalid amount, Please try again...\n");
-                }
-                $this->table->bet($this, $amount);
                 break;
             case "a":
                 $this->table->all_in($this);

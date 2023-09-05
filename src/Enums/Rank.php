@@ -40,7 +40,7 @@ enum Rank: int
     public function display_long(): string
     {
         return match ($this) {
-            self::TWO => 'Two',
+            self::TWO => 'Deuce',
             self::THREE => 'Three',
             self::FOUR => 'Four',
             self::FIVE => 'Five',
