@@ -207,6 +207,7 @@ class Seat
                         if (array_key_exists($data["action"], $options)) {
                             $answered = true;
                             $char = strtolower(substr($data["action"], 0, 1));
+                            if ($char == "r") $char = "b";
                             switch ($char) {
                                 case "c":
                                     if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
