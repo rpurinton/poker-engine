@@ -120,16 +120,24 @@ class Seat
         $answered = false;
         while (!$answered) {
             $model = "gpt-3.5-turbo-0613";
-            $system_message = implode("\n", $this->table->get_chat_history(3072));
-            $system_message .= "\n=============================================================\n";
+            $system_message = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . " in a friendly sit-and-go home game with your co-workers at Discommand.com\n";
+            $system_message .= "Lily is the CEO, Adam is the Architect/CTO, Bella is the COO, Ursula is the CLO/GC, Finley is the CFO, Stella is Chief Security Officer, Derek is the MySQL DBA, Penelope is a PHP Developer, and Frank is the Project Manager.\n";
+            $system_message .= "Everyone starts with 1500 chips and the blinds start at $10/$20 and go up every 9 hands until $250/$500.\n";
+            $system_message .= "You are currently in the " . $this->table->hand_count . " hand of the tournament.\n";
+            $system_message .= "We have included the history of the table chat and the current state of the table below.\n";
+            $system_message .= "Everyone here (including you) are Expert level poker players employing perfect GTO strategy. (Game Theory Optimal)\n";
+            $system_message .= "Socializing and funny, friendly, flirty chat messages are highly encouraged and part of the fun of the game!\n";
+            $messages[] = ["role" => "system", "content" => $system_message];
+            $user_message = implode("\n", $this->table->get_chat_history(3072));
+            $user_message .= "\n=============================================================\n";
             foreach ($this->table->pots as $key => $pot) {
                 if ($key == 0) $pot_display_name = "Main Pot";
                 else $pot_display_name = "Side Pot " . $key;
-                $system_message .= $pot_display_name . ": $pot\n";
+                $user_message .= $pot_display_name . ": $pot\n";
             }
-            $system_message .= "Seat\tStack\tIn For\tName\tPocket\tHand\n";
-            $system_message .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
-            $messages = [["role" => "system", "content" => $system_message]];
+            $user_message .= "Seat\tStack\tIn For\tName\tPocket\tHand\n";
+            $user_message .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t [" . implode("] [", $this->cards) . "]\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
+            $messages = [["role" => "user", "content" => $user_message]];
             $options_message = "";
             foreach ($options as $key => $option) $options_message .= " [" . strtolower($key) . "] " . $option . "\t";
             $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . ", use the take_action function to make your move!\n" . $options_message . "\n"];

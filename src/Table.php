@@ -34,7 +34,7 @@ class Table
     private int $button_position = 0;
     private int $action_position = 0;
     public array $chat_history = [];
-    private $hand_count = 0;
+    public $hand_count = 0;
     private $bet = 0;
     private float $last_raise_amount = 0;
 
