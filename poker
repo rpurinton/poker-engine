@@ -1476,24 +1476,35 @@ class Seat
         while (!$answered) {
             $messages = [];
             $model = "gpt-3.5-turbo-0613";
-            $system_message1 = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . " in a friendly sit-and-go home game with your co-workers at Discommand.com\n";
+            $system_message1 = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . " in a friendly winner-takes-all home sit-and-go tournament with your co-workers from Discommand.com\n";
             $system_message1 .= "Lily is the CEO, Adam is the Architect/CTO, Bella is the COO, Ursula is the CLO/GC, Finley is the CFO, Stella is Chief Security Officer, Derek is the MySQL DBA, Max is a Graphics Designer, and Frank is the Project Manager.\n";
-            $system_message1 .= "Everyone starts with 1500 chips and the blinds start at $10/$20 and go up every 9 hands until $250/$500.\n";
-            $system_message1 .= "You are currently in the " . $this->table->hand_count . " hand of the tournament.\n";
+            $system_message1 .= "Everyone starts with 1500 chips and the blinds start at $10/$20 and go up every 9 hands.\n";
+            $system_message1 .= "You are currently in hand #" . $this->table->hand_count . " of the tournament.\n";
             $system_message1 .= "We have included the history of the table chat and the current state of the table below.\n";
             $messages[] = ["role" => "system", "content" => $system_message1];
             $user_message1 = implode("\n", $this->table->get_chat_history(3072));
             $messages[] = ["role" => "user", "content" => $user_message1];
-            $system_message2 = "Welcome to the poker game! Get ready for an exciting round of Texas Hold'em. As you navigate through each hand, remember to carefully assess your hole cards and the community cards. Consider the available actions, such as checking, betting, calling, raising, and folding, as you make strategic decisions. The AI players will bring their unique playing styles and personalities to the table, adding depth and challenge to the game. Pay attention to their betting patterns, reactions, and dialogue prompts to gain insights into their strategies. Remember to keep your own poker face and stay focused. Good luck, and may the best hand win!\n";
+            $system_message2 = "Welcome to the poker game! Get ready for an exciting round of Texas Hold'em. As you navigate through each hand, remember to consider the following factors that can influence your decision-making:
+                Hand Strength: Evaluate the ranking and potential of your starting hand.
+                Chip Stack Size: Assess your chip stack compared to blinds and antes.
+                Position at the Table: Utilize your position to make informed decisions.
+                Betting History: Analyze the betting patterns and tendencies of your opponents.
+                Table Dynamics: Observe player interactions, chat messages, and betting behavior.
+                Blind Levels and Tournament Stage: Adapt your strategy based on the stage of the tournament and number of players at the table.
+                Stack-to-Pot Ratio (SPR): Consider the relationship between your chip stack and the pot.
+                Player Image: Be aware of your own table image and use it strategically.
+                
+                Incorporating these factors into your decision-making will lead to a more strategic and profitable gameplay experience. Good luck, and may the best hand win!";
             $messages[] = ["role" => "system", "content" => $system_message2];
             $user_message2 = "Current Action is on:\n";
             $user_message2 .= "Seat\tStack\tIn For\tName\tPocket\tHand\n";
             $user_message2 .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t [" . implode("] [", $this->cards) . "]\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
+            $user_message2 .= "Community Cards: [" . implode("] [", $this->table->communityCards) . "]\n";
             $messages[] = ["role" => "user", "content" => $user_message2];
             $options_message = "";
             foreach ($options as $key => $option) $options_message .= "[" . strtolower($key) . "] " . $option . "\n";
             echo ($options_message);
-            $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . ", play smart!  don't play stupid! use GTO to contemplate your best move in this specific scenario, then use the take_action function to make your move!" . $options_message . "\n"];
+            $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . " its your move... play smart!  if you have the nuts you must raise on the river! use GTO strategy to determine the best move in this specific scenario, then use the take_action function to make your move! Available options: " . $options_message . "\n"];
             $prompt = [
                 "model" => $model,
                 "messages" => $messages,
@@ -1746,15 +1757,13 @@ class Table
     {
         $this->hand_count++;
         $hand_count_display = number_format($this->hand_count, 0, '.', ',');
-        echo ("\n\n\n===========STARTING HAND #$hand_count_display========================\n");
+        echo ("\n\n\n===============STARTING HAND #$hand_count_display====================\n");
         $this->chat($this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $this->muck = [];
         $this->communityCards = [];
         $this->pots = [];
         $this->pots[0] = new Pot(0, false);
-        $this->bet = $this->config["bigBlind"];
-        $this->last_raise_amount = $this->config["bigBlind"] - $this->config["smallBlind"];
         $players_ready = $this->reset_seats();
         if ($players_ready < 2) {
             $this->chat("Not enough players to start a new hand.");
@@ -1854,7 +1863,7 @@ class Table
     }
     private function betting_round(): void
     {
-        $status_message = "\n====================CURRENT POTS=====================\n";
+        $status_message = "\n=================CURRENT POTS=================\n";
         foreach ($this->pots as $key => $pot) {
             if ($key == 0) $pot_display_name = "Main Pot";
             else $pot_display_name = "Side Pot " . $key;
@@ -1944,7 +1953,7 @@ class Table
                 }
                 $available_actions["c"] = "Call $" . number_format($bet_diff, 2, '.', ',');
                 if ($max_opponent_stack > 0) {
-                    $available_actions["r"] = "Raise <amount> (minimum: $" . number_format(max($this->last_raise_amount * 2, $this->config["bigBlind"]), 2, '.', ',') . ")";
+                    $available_actions["r"] = "Bet/Raise <amount> (minimum: $" . number_format($this->bet + max($this->last_raise_amount * 2, $this->config["bigBlind"]), 2, '.', ',') . ")";
                     $available_actions["a"] = "Raise All In for $" . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
                 }
             } else if ($seat->get_stack()->get_amount() < $bet_diff) {
@@ -1953,7 +1962,7 @@ class Table
                 unset($available_actions["c"]);
                 $available_actions["a"] = "Call All In for " . $seat->get_stack();
             }
-        } else {
+        } else if ($seat->bet == $this->bet) {
             $max_opponent_stack = 0;
             foreach ($this->seats as $other_seat) {
                 if ($other_seat->seat_num == $seat->seat_num) continue;
@@ -2101,6 +2110,7 @@ class Table
         $small_blind_amount = $this->config['smallBlind'];
         $small_blind_seat_number = $this->get_next_active_seat($this->button_position);
         $small_blind_seat = $this->seats[$small_blind_seat_number];
+        $small_blind_amount = min($small_blind_amount, $small_blind_seat->get_stack()->get_amount());
         while ($small_blind_seat->get_stack()->get_amount() < $small_blind_amount) {
             $small_blind_seat->set_status(SeatStatus::SITOUT);
             $small_blind_seat_number = $this->get_next_active_seat($this->button_position);
@@ -2108,8 +2118,11 @@ class Table
         }
         $this->pots[count($this->pots) - 1]->contribute($small_blind_amount, $small_blind_seat);
         $small_blind_seat->set_status(SeatStatus::UPCOMING_ACTION);
-        $small_blind_seat->bet = $small_blind_amount;
-        $small_blind_seat->total_bet = $small_blind_amount;
+        if ($small_blind_seat->get_stack()->get_amount() === 0) $small_blind_seat->set_status(SeatStatus::ALLIN);
+        $small_blind_seat->bet = $this->config['smallBlind'];
+        $small_blind_seat->total_bet = $this->config['smallBlind'];
+        $this->bet = $this->config['smallBlind'];
+        $this->last_raise_amount = $this->config['smallBlind'];
         $this->chat($small_blind_seat->get_player()->get_name() . " posts the small blind of $" . $small_blind_amount);
         return $small_blind_seat_number;
     }
@@ -2118,6 +2131,7 @@ class Table
         $big_blind_amount = $this->config['bigBlind'];
         $big_blind_seat_number = $this->get_next_active_seat($small_blind_seat_number);
         $big_blind_seat = $this->seats[$big_blind_seat_number];
+        $big_blind_amount = min($big_blind_amount, $big_blind_seat->get_stack()->get_amount());
         while ($big_blind_seat->get_stack()->get_amount() < $big_blind_amount) {
             $big_blind_seat->set_status(SeatStatus::SITOUT);
             $big_blind_seat_number = $this->get_next_active_seat($this->button_position + 2);
@@ -2125,8 +2139,11 @@ class Table
         }
         $this->pots[count($this->pots) - 1]->contribute($big_blind_amount, $big_blind_seat);
         $big_blind_seat->set_status(SeatStatus::UPCOMING_ACTION);
-        $big_blind_seat->bet = $big_blind_amount;
-        $big_blind_seat->total_bet = $big_blind_amount;
+        if ($big_blind_seat->get_stack()->get_amount() === 0) $big_blind_seat->set_status(SeatStatus::ALLIN);
+        $big_blind_seat->bet = $this->config['bigBlind'];
+        $big_blind_seat->total_bet = $this->config['bigBlind'];
+        $this->bet = $this->config['bigBlind'];
+        $this->last_raise_amount = $this->config['bigBlind'] - $this->config['smallBlind'];
         $this->chat($big_blind_seat->get_player()->get_name() . " posts the big blind of $" . $big_blind_amount);
         return $big_blind_seat_number;
     }
@@ -2150,8 +2167,7 @@ class Table
             $seat->clear_cards();
             $seat->bet = 0;
             $seat->total_bet = 0;
-            $seat->top_up($this->config['maxBuyIn']);
-            switch ($seat->get_status()) {
+                        switch ($seat->get_status()) {
                 case SeatStatus::WAITING:
                 case SeatStatus::POSTED:
                 case SeatStatus::FOLDED:
@@ -2162,22 +2178,19 @@ class Table
                 case SeatStatus::BET:
                 case SeatStatus::CHECKED:
                 case SeatStatus::UPCOMING_ACTION:
-                    if ($seat->get_stack()->get_amount() < $this->config['bigBlind']) $seat->set_status(SeatStatus::SITOUT);
-                    else {
-                        $seat->set_status(SeatStatus::PLAYING);
-                        $this->chat("$seat_number\t" .
-                            "{$seat->get_player()->get_bankroll()}\t" .
-                            "{$seat->get_stack()}\t" .
-                            "{$seat->get_player()->get_name()}\t" .
-                            "{$seat->get_player()->type->display()}\t" .
-                            "{$seat->get_status()->display()}");
-                        $players_ready++;
-                        $this->pots[0]->eligible[$seat_number] = [
-                            "seat" => $seat,
-                            "contributed" => 0
-                        ];
-                    }
-                    break;
+                                                            $seat->set_status(SeatStatus::PLAYING);
+                    $this->chat("$seat_number\t" .
+                        "{$seat->get_player()->get_bankroll()}\t" .
+                        "{$seat->get_stack()}\t" .
+                        "{$seat->get_player()->get_name()}\t" .
+                        "{$seat->get_player()->type->display()}\t" .
+                        "{$seat->get_status()->display()}");
+                    $players_ready++;
+                    $this->pots[0]->eligible[$seat_number] = [
+                        "seat" => $seat,
+                        "contributed" => 0
+                    ];
+                                        break;
                 case SeatStatus::TIMEOUT:
                     $seat->set_status(SeatStatus::SITOUT);
                     $this->chat("$seat_number\t" .
@@ -2250,7 +2263,59 @@ $tournament_blinds = [
     [125, 250],
     [150, 300],
     [200, 400],
-    [250, 500]
+    [250, 500],
+    [300, 600],
+    [400, 800],
+    [500, 1000],
+    [600, 1200],
+    [800, 1600],
+    [1000, 2000],
+    [1200, 2400],
+    [1500, 3000],
+    [2000, 4000],
+    [2500, 5000],
+    [3000, 6000],
+    [4000, 8000],
+    [5000, 10000],
+    [6000, 12000],
+    [8000, 16000],
+    [10000, 20000],
+    [12000, 24000],
+    [15000, 30000],
+    [20000, 40000],
+    [25000, 50000],
+    [30000, 60000],
+    [40000, 80000],
+    [50000, 100000],
+    [60000, 120000],
+    [80000, 160000],
+    [100000, 200000],
+    [120000, 240000],
+    [150000, 300000],
+    [200000, 400000],
+    [250000, 500000],
+    [300000, 600000],
+    [400000, 800000],
+    [500000, 1000000],
+    [600000, 1200000],
+    [800000, 1600000],
+    [1000000, 2000000],
+    [1200000, 2400000],
+    [1500000, 3000000],
+    [2000000, 4000000],
+    [2500000, 5000000],
+    [3000000, 6000000],
+    [4000000, 8000000],
+    [5000000, 10000000],
+    [6000000, 12000000],
+    [8000000, 16000000],
+    [10000000, 20000000],
+    [12000000, 24000000],
+    [15000000, 30000000],
+    [20000000, 40000000],
+    [25000000, 50000000],
+    [30000000, 60000000],
+    [40000000, 80000000],
 ];
 $table = $casino->add_table(new Table([
     "id" => 1,

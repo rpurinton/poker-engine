@@ -109,15 +109,13 @@ class Table
     {
         $this->hand_count++;
         $hand_count_display = number_format($this->hand_count, 0, '.', ',');
-        echo ("\n\n\n===========STARTING HAND #$hand_count_display========================\n");
+        echo ("\n\n\n===============STARTING HAND #$hand_count_display====================\n");
         $this->chat($this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $this->muck = [];
         $this->communityCards = [];
         $this->pots = [];
         $this->pots[0] = new Pot(0, false);
-        $this->bet = $this->config["bigBlind"];
-        $this->last_raise_amount = $this->config["bigBlind"] - $this->config["smallBlind"];
         $players_ready = $this->reset_seats();
         if ($players_ready < 2) {
             $this->chat("Not enough players to start a new hand.");
@@ -219,7 +217,7 @@ class Table
 
     private function betting_round(): void
     {
-        $status_message = "\n====================CURRENT POTS=====================\n";
+        $status_message = "\n=================CURRENT POTS=================\n";
         foreach ($this->pots as $key => $pot) {
             if ($key == 0) $pot_display_name = "Main Pot";
             else $pot_display_name = "Side Pot " . $key;
@@ -313,7 +311,7 @@ class Table
                 }
                 $available_actions["c"] = "Call $" . number_format($bet_diff, 2, '.', ',');
                 if ($max_opponent_stack > 0) {
-                    $available_actions["r"] = "Raise <amount> (minimum: $" . number_format(max($this->last_raise_amount * 2, $this->config["bigBlind"]), 2, '.', ',') . ")";
+                    $available_actions["r"] = "Bet/Raise <amount> (minimum: $" . number_format($this->bet + max($this->last_raise_amount * 2, $this->config["bigBlind"]), 2, '.', ',') . ")";
                     $available_actions["a"] = "Raise All In for $" . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
                 }
             } else if ($seat->get_stack()->get_amount() < $bet_diff) {
@@ -322,7 +320,7 @@ class Table
                 unset($available_actions["c"]);
                 $available_actions["a"] = "Call All In for " . $seat->get_stack();
             }
-        } else {
+        } else if ($seat->bet == $this->bet) {
             $max_opponent_stack = 0;
             foreach ($this->seats as $other_seat) {
                 if ($other_seat->seat_num == $seat->seat_num) continue;
@@ -490,6 +488,7 @@ class Table
         $small_blind_amount = $this->config['smallBlind'];
         $small_blind_seat_number = $this->get_next_active_seat($this->button_position);
         $small_blind_seat = $this->seats[$small_blind_seat_number];
+        $small_blind_amount = min($small_blind_amount, $small_blind_seat->get_stack()->get_amount());
         while ($small_blind_seat->get_stack()->get_amount() < $small_blind_amount) {
             $small_blind_seat->set_status(SeatStatus::SITOUT);
             $small_blind_seat_number = $this->get_next_active_seat($this->button_position);
@@ -497,8 +496,11 @@ class Table
         }
         $this->pots[count($this->pots) - 1]->contribute($small_blind_amount, $small_blind_seat);
         $small_blind_seat->set_status(SeatStatus::UPCOMING_ACTION);
-        $small_blind_seat->bet = $small_blind_amount;
-        $small_blind_seat->total_bet = $small_blind_amount;
+        if ($small_blind_seat->get_stack()->get_amount() === 0) $small_blind_seat->set_status(SeatStatus::ALLIN);
+        $small_blind_seat->bet = $this->config['smallBlind'];
+        $small_blind_seat->total_bet = $this->config['smallBlind'];
+        $this->bet = $this->config['smallBlind'];
+        $this->last_raise_amount = $this->config['smallBlind'];
         $this->chat($small_blind_seat->get_player()->get_name() . " posts the small blind of $" . $small_blind_amount);
         return $small_blind_seat_number;
     }
@@ -508,6 +510,7 @@ class Table
         $big_blind_amount = $this->config['bigBlind'];
         $big_blind_seat_number = $this->get_next_active_seat($small_blind_seat_number);
         $big_blind_seat = $this->seats[$big_blind_seat_number];
+        $big_blind_amount = min($big_blind_amount, $big_blind_seat->get_stack()->get_amount());
         while ($big_blind_seat->get_stack()->get_amount() < $big_blind_amount) {
             $big_blind_seat->set_status(SeatStatus::SITOUT);
             $big_blind_seat_number = $this->get_next_active_seat($this->button_position + 2);
@@ -515,8 +518,11 @@ class Table
         }
         $this->pots[count($this->pots) - 1]->contribute($big_blind_amount, $big_blind_seat);
         $big_blind_seat->set_status(SeatStatus::UPCOMING_ACTION);
-        $big_blind_seat->bet = $big_blind_amount;
-        $big_blind_seat->total_bet = $big_blind_amount;
+        if ($big_blind_seat->get_stack()->get_amount() === 0) $big_blind_seat->set_status(SeatStatus::ALLIN);
+        $big_blind_seat->bet = $this->config['bigBlind'];
+        $big_blind_seat->total_bet = $this->config['bigBlind'];
+        $this->bet = $this->config['bigBlind'];
+        $this->last_raise_amount = $this->config['bigBlind'] - $this->config['smallBlind'];
         $this->chat($big_blind_seat->get_player()->get_name() . " posts the big blind of $" . $big_blind_amount);
         return $big_blind_seat_number;
     }
@@ -544,7 +550,7 @@ class Table
             $seat->clear_cards();
             $seat->bet = 0;
             $seat->total_bet = 0;
-            $seat->top_up($this->config['maxBuyIn']);
+            //$seat->top_up($this->config['maxBuyIn']);
             switch ($seat->get_status()) {
                 case SeatStatus::WAITING:
                 case SeatStatus::POSTED:
@@ -556,21 +562,21 @@ class Table
                 case SeatStatus::BET:
                 case SeatStatus::CHECKED:
                 case SeatStatus::UPCOMING_ACTION:
-                    if ($seat->get_stack()->get_amount() < $this->config['bigBlind']) $seat->set_status(SeatStatus::SITOUT);
-                    else {
-                        $seat->set_status(SeatStatus::PLAYING);
-                        $this->chat("$seat_number\t" .
-                            "{$seat->get_player()->get_bankroll()}\t" .
-                            "{$seat->get_stack()}\t" .
-                            "{$seat->get_player()->get_name()}\t" .
-                            "{$seat->get_player()->type->display()}\t" .
-                            "{$seat->get_status()->display()}");
-                        $players_ready++;
-                        $this->pots[0]->eligible[$seat_number] = [
-                            "seat" => $seat,
-                            "contributed" => 0
-                        ];
-                    }
+                    //if ($seat->get_stack()->get_amount() < $this->config['bigBlind']) $seat->set_status(SeatStatus::SITOUT);
+                    //else {
+                    $seat->set_status(SeatStatus::PLAYING);
+                    $this->chat("$seat_number\t" .
+                        "{$seat->get_player()->get_bankroll()}\t" .
+                        "{$seat->get_stack()}\t" .
+                        "{$seat->get_player()->get_name()}\t" .
+                        "{$seat->get_player()->type->display()}\t" .
+                        "{$seat->get_status()->display()}");
+                    $players_ready++;
+                    $this->pots[0]->eligible[$seat_number] = [
+                        "seat" => $seat,
+                        "contributed" => 0
+                    ];
+                    //}
                     break;
                 case SeatStatus::TIMEOUT:
                     $seat->set_status(SeatStatus::SITOUT);

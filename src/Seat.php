@@ -121,24 +121,36 @@ class Seat
         while (!$answered) {
             $messages = [];
             $model = "gpt-3.5-turbo-0613";
-            $system_message1 = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . " in a friendly sit-and-go home game with your co-workers at Discommand.com\n";
+            $system_message1 = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . " in a friendly winner-takes-all home sit-and-go tournament with your co-workers from Discommand.com\n";
             $system_message1 .= "Lily is the CEO, Adam is the Architect/CTO, Bella is the COO, Ursula is the CLO/GC, Finley is the CFO, Stella is Chief Security Officer, Derek is the MySQL DBA, Max is a Graphics Designer, and Frank is the Project Manager.\n";
-            $system_message1 .= "Everyone starts with 1500 chips and the blinds start at $10/$20 and go up every 9 hands until $250/$500.\n";
-            $system_message1 .= "You are currently in the " . $this->table->hand_count . " hand of the tournament.\n";
+            $system_message1 .= "Everyone starts with 1500 chips and the blinds start at $10/$20 and go up every 9 hands.\n";
+            $system_message1 .= "You are currently in hand #" . $this->table->hand_count . " of the tournament.\n";
             $system_message1 .= "We have included the history of the table chat and the current state of the table below.\n";
             $messages[] = ["role" => "system", "content" => $system_message1];
             $user_message1 = implode("\n", $this->table->get_chat_history(3072));
             $messages[] = ["role" => "user", "content" => $user_message1];
-            $system_message2 = "Welcome to the poker game! Get ready for an exciting round of Texas Hold'em. As you navigate through each hand, remember to carefully assess your hole cards and the community cards. Consider the available actions, such as checking, betting, calling, raising, and folding, as you make strategic decisions. The AI players will bring their unique playing styles and personalities to the table, adding depth and challenge to the game. Pay attention to their betting patterns, reactions, and dialogue prompts to gain insights into their strategies. Remember to keep your own poker face and stay focused. Good luck, and may the best hand win!\n";
+            $system_message2 = "Welcome to the poker game! Get ready for an exciting round of Texas Hold'em. As you navigate through each hand, remember to consider the following factors that can influence your decision-making:
+
+                Hand Strength: Evaluate the ranking and potential of your starting hand.
+                Chip Stack Size: Assess your chip stack compared to blinds and antes.
+                Position at the Table: Utilize your position to make informed decisions.
+                Betting History: Analyze the betting patterns and tendencies of your opponents.
+                Table Dynamics: Observe player interactions, chat messages, and betting behavior.
+                Blind Levels and Tournament Stage: Adapt your strategy based on the stage of the tournament and number of players at the table.
+                Stack-to-Pot Ratio (SPR): Consider the relationship between your chip stack and the pot.
+                Player Image: Be aware of your own table image and use it strategically.
+                
+                Incorporating these factors into your decision-making will lead to a more strategic and profitable gameplay experience. Good luck, and may the best hand win!";
             $messages[] = ["role" => "system", "content" => $system_message2];
             $user_message2 = "Current Action is on:\n";
             $user_message2 .= "Seat\tStack\tIn For\tName\tPocket\tHand\n";
             $user_message2 .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t [" . implode("] [", $this->cards) . "]\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
+            $user_message2 .= "Community Cards: [" . implode("] [", $this->table->communityCards) . "]\n";
             $messages[] = ["role" => "user", "content" => $user_message2];
             $options_message = "";
             foreach ($options as $key => $option) $options_message .= "[" . strtolower($key) . "] " . $option . "\n";
             echo ($options_message);
-            $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . ", play smart!  don't play stupid! use GTO to contemplate your best move in this specific scenario, then use the take_action function to make your move!" . $options_message . "\n"];
+            $messages[] = ["role" => "user", "content" => "Hey " . $this->player->get_name() . " its your move... play smart!  if you have the nuts you must raise on the river! use GTO strategy to determine the best move in this specific scenario, then use the take_action function to make your move! Available options: " . $options_message . "\n"];
             $prompt = [
                 "model" => $model,
                 "messages" => $messages,
