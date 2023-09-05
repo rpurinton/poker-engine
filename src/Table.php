@@ -300,20 +300,27 @@ class Table
     private function get_available_actions(Seat $seat): array
     {
         $available_actions = [];
+
         if ($seat->bet < $this->bet) {
             $available_actions["f"] = "Fold";
             $bet_diff = $this->bet - $seat->bet;
+
             if ($seat->get_stack()->get_amount() > $bet_diff) {
                 $max_opponent_stack = 0;
+
                 foreach ($this->seats as $other_seat) {
                     if ($other_seat->seat_num == $seat->seat_num) continue;
-                    if ($other_seat->get_stack()->get_amount() > $max_opponent_stack) $max_opponent_stack = $other_seat->get_stack()->get_amount();
+                    if ($other_seat->get_stack()->get_amount() > $max_opponent_stack) {
+                        $max_opponent_stack = $other_seat->get_stack()->get_amount();
+                    }
                 }
-                $available_actions["c"] = "Call $" . number_format($bet_diff, 2, '.', ',');
-                if ($max_opponent_stack > 0) {
-                    $available_actions["r"] = "Bet/Raise <amount> (minimum: $" . number_format($this->bet + max($this->last_raise_amount * 2, $this->config["bigBlind"]), 2, '.', ',') . ")";
-                    $available_actions["a"] = "Raise All In for $" . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
-                }
+
+                $min_raise_amount_by = max($this->last_raise_amount, $this->config["bigBlind"]);
+                $min_raise_amount_to = $this->bet + $min_raise_amount_by;
+
+                $available_actions["b"] = "Bet/Raise BY <amount> (minimum: $" . number_format($min_raise_amount_by, 2, '.', ',') . ")";
+                $available_actions["r"] = "Bet/Raise TO <amount> (minimum: $" . number_format($min_raise_amount_to, 2, '.', ',') . ")";
+                $available_actions["a"] = "Raise All In for $" . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
             } else if ($seat->get_stack()->get_amount() < $bet_diff) {
                 $available_actions["a"] = "Call All In for Less (" . $seat->get_stack() . ")";
             } else if ($seat->get_stack()->get_amount() == $bet_diff) {
@@ -324,12 +331,17 @@ class Table
             $max_opponent_stack = 0;
             foreach ($this->seats as $other_seat) {
                 if ($other_seat->seat_num == $seat->seat_num) continue;
-                if ($other_seat->get_stack()->get_amount() > $max_opponent_stack) $max_opponent_stack = $other_seat->get_stack()->get_amount();
+                if ($other_seat->get_stack()->get_amount() > $max_opponent_stack) {
+                    $max_opponent_stack = $other_seat->get_stack()->get_amount();
+                }
             }
+
             $available_actions["c"] = "Check";
-            $available_actions["r"] = "Raise <amount> (minimum: " . $this->config["bigBlind"] . ")";
+            $available_actions["r_by"] = "Raise by <amount> (minimum: " . $this->config["bigBlind"] . ")";
+            $available_actions["r_to"] = "Raise to <amount> (maximum: " . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',') . ")";
             $available_actions["a"] = "Raise All In for " . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
         }
+
         return $available_actions;
     }
 
@@ -381,16 +393,32 @@ class Table
         $this->chat($seat->get_player()->get_name() . " calls $" . number_format($diff_amount, 2, '.', ','));
     }
 
-    public function raise(Seat $seat, $amount): void
+    public function raise_by(Seat $seat, $amount): void
+    {
+        echo ("\r                                                                                          \r");
+        $amount = min($amount, $seat->get_stack()->get_amount());
+        $amount = max($amount, $this->last_raise_amount * 2);
+        $seat->bet += $amount;
+        $seat->total_bet += $amount;
+        $this->pots[count($this->pots) - 1]->contribute($amount, $seat);
+        $this->last_raise_amount = $seat->bet - $this->bet;
+        $this->bet = $seat->bet;
+        $this->chat($seat->get_player()->get_name() . " raises by $" . number_format($amount, 2, '.', ',') . " to $" . number_format($seat->bet, 2, '.', ','));
+        foreach ($this->seats as $other_seat) if ($other_seat->get_status()->active()) $other_seat->set_status(SeatStatus::UPCOMING_ACTION);
+        if ($seat->get_stack()->get_amount() === 0) $seat->set_status(SeatStatus::ALLIN);
+        else $seat->set_status(SeatStatus::RAISED);
+    }
+
+    public function raise_to(Seat $seat, $amount): void
     {
         echo ("\r                                                                                          \r");
         $amount -= $seat->bet;
         $amount = min($amount, $seat->get_stack()->get_amount());
         $amount = max($amount, $this->last_raise_amount * 2);
-        $this->last_raise_amount = $amount;
         $seat->bet += $amount;
         $seat->total_bet += $amount;
         $this->pots[count($this->pots) - 1]->contribute($amount, $seat);
+        $this->last_raise_amount = $seat->bet - $this->bet;
         $this->bet = $seat->bet;
         $this->chat($seat->get_player()->get_name() . " raises by $" . number_format($amount, 2, '.', ',') . " to $" . number_format($seat->bet, 2, '.', ','));
         foreach ($this->seats as $other_seat) if ($other_seat->get_status()->active()) $other_seat->set_status(SeatStatus::UPCOMING_ACTION);
