@@ -71,6 +71,8 @@ class Pot
 
     public function payout_last_player(string $display_name): array
     {
+        if ($this->amount == 0) return [];
+        if (count($this->eligible) == 0) return [];
         $seat = array_pop($this->eligible);
         $profit = $this->amount - $seat["contributed"];
         if ($profit > 0) $plus = "+";

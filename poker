@@ -1365,6 +1365,8 @@ class Pot
     }
     public function payout_last_player(string $display_name): array
     {
+        if ($this->amount == 0) return [];
+        if (count($this->eligible) == 0) return [];
         $seat = array_pop($this->eligible);
         $profit = $this->amount - $seat["contributed"];
         if ($profit > 0) $plus = "+";
@@ -1858,7 +1860,17 @@ class Table
     }
     private function showdown(): void
     {
-        echo ("=============SHOWDOWN!=============\n");
+        $status_message =  ("\n=============SHOWDOWN!=============\n");
+        foreach ($this->pots as $key => $pot) {
+            if ($key == 0) $pot_display_name = "Main Pot";
+            else $pot_display_name = "Side Pot " . $key;
+            $eligible_seats = array_keys($pot->eligible);
+            $eliglbe_player_names = [];
+            foreach ($eligible_seats as $seat_num) $eliglbe_player_names[] = $this->seats[$seat_num]->get_player()->get_name() . " ($" . number_format($pot->eligible[$seat_num]["contributed"], 2, '.', ',') . ")";
+            $eliglbe_player_names_string = implode(", ", $eliglbe_player_names);
+            $status_message .= $pot_display_name . ": $pot [$eliglbe_player_names_string]\n";
+        }
+        $this->chat($status_message);
         foreach ($this->pots as $key => $pot) {
             if ($key == 0) $pot_display = "the Main Pot";
             else $pot_display = "Side Pot $key";
@@ -1896,6 +1908,8 @@ class Table
         if ($this->config["status"] != TableStatus::PREFLOP) $this->action_position = $this->button_position;
         $this->pots[count($this->pots) - 1]->good = false;
         while (!$this->all_pots_are_good()) {
+            if ($this->config["status"] == TableStatus::HAND_OVER) break;
+            if ($this->config["status"] == TableStatus::ALLIN) break;
             $action_order = $this->get_action_order();
             if (count($action_order) < 1) {
                 $this->config['status'] = TableStatus::ALLIN;
@@ -1904,35 +1918,40 @@ class Table
             $seat_number = $action_order[0];
             $this->action_position = $seat_number;
             $seat = $this->seats[$seat_number];
-            $seat->prompt($this->get_available_actions($seat));
+            $available_actions = $this->get_available_actions($seat);
+            if (count($available_actions)) $seat->prompt($available_actions);
+            else $seat->set_status(SeatStatus::ALLIN);
+            $this->check_table_all_in();
             if ($this->config['status'] == TableStatus::HAND_OVER) return;
         }
         $this->action_position = $this->button_position;
                 $current_pot = count($this->pots) - 1;
         $eligible = $this->pots[$current_pot]->eligible;
-        $contributions = [];
-        foreach ($eligible as $seat) {
-            $contributions[] = $seat["contributed"];
-        }
-        $max_contribution = max($contributions);
-        $min_contribution = min($contributions);
-        while ($max_contribution > $min_contribution) {
-            $this->pots[$current_pot + 1] = new Pot(0);
-            $eligible = $this->pots[$current_pot]->eligible;
+        if (count($eligible) > 1) {
             $contributions = [];
             foreach ($eligible as $seat) {
                 $contributions[] = $seat["contributed"];
             }
             $max_contribution = max($contributions);
             $min_contribution = min($contributions);
-            foreach ($eligible as $seat_num => $seat) {
-                if ($seat["contributed"] > $min_contribution) {
-                    $diff_amount = $seat["contributed"] - $min_contribution;
-                    $this->pots[$current_pot]->uncontribute($diff_amount, $seat["seat"]);
-                    $this->pots[$current_pot + 1]->contribute($diff_amount, $seat["seat"]);
+            while ($max_contribution > $min_contribution) {
+                $this->pots[$current_pot + 1] = new Pot(0);
+                $eligible = $this->pots[$current_pot]->eligible;
+                $contributions = [];
+                foreach ($eligible as $seat) {
+                    $contributions[] = $seat["contributed"];
                 }
+                $max_contribution = max($contributions);
+                $min_contribution = min($contributions);
+                foreach ($eligible as $seat_num => $seat) {
+                    if ($seat["contributed"] > $min_contribution) {
+                        $diff_amount = $seat["contributed"] - $min_contribution;
+                        $this->pots[$current_pot]->uncontribute($diff_amount, $seat["seat"]);
+                        $this->pots[$current_pot + 1]->contribute($diff_amount, $seat["seat"]);
+                    }
+                }
+                $current_pot++;
             }
-            $current_pot++;
         }
                 $active_players = 0;
         foreach ($this->seats as $seat) {
@@ -2047,8 +2066,8 @@ class Table
         $amount = $bet_diff;
         $amount = min($amount, $max_raise_amount_by);
         $amount = max($amount, $min_raise_amount_by);
-        $amount = min($amount, $seat->get_stack()->get_amount());
         $amount = max($amount, $this->last_raise_amount);
+        $amount = min($amount, $seat->get_stack()->get_amount());
         $seat->bet += $amount;
         $seat->total_bet += $amount;
         $amount = min($amount, $seat->get_stack()->get_amount());
@@ -2058,6 +2077,7 @@ class Table
             $seat->set_status(SeatStatus::ALLIN);
             $this->chat($seat->get_player()->get_name() . " is ALL-IN!");
         } else $seat->set_status(SeatStatus::CALLED);
+        $this->check_table_all_in();
     }
     public function raise_by(Seat $seat, $amount): void
     {
@@ -2065,8 +2085,8 @@ class Table
         extract($this->get_min_max($seat));
         $amount = min($amount, $max_raise_amount_by);
         $amount = max($amount, $min_raise_amount_by);
-        $amount = min($amount, $seat->get_stack()->get_amount());
         $amount = max($amount, $this->last_raise_amount);
+        $amount = min($amount, $seat->get_stack()->get_amount());
         $amount = $this->bet + $amount - $seat->bet;
         $seat->bet += $amount;
         $seat->total_bet += $amount;
@@ -2077,10 +2097,11 @@ class Table
         foreach ($this->seats as $other_seat) {
             if ($other_seat->get_status()->active()) $other_seat->set_status(SeatStatus::UPCOMING_ACTION);
         }
-        if ($seat->get_stack()->get_amount() === 0) {
+        if ($seat->get_stack()->get_amount() <= 0) {
             $seat->set_status(SeatStatus::ALLIN);
             $this->chat($seat->get_player()->get_name() . " is ALL-IN!");
         } else $seat->set_status(SeatStatus::RAISED);
+        $this->check_table_all_in();
     }
     public function all_in(Seat $seat): void
     {
@@ -2094,6 +2115,16 @@ class Table
         else $this->chat($seat->get_player()->get_name() . " is all in for $" . number_format($seat->bet, 2, '.', ','));
         foreach ($this->seats as $other_seat) if ($other_seat->get_status()->active()) $other_seat->set_status(SeatStatus::UPCOMING_ACTION);
         $seat->set_status(SeatStatus::ALLIN);
+        $this->check_table_all_in();
+    }
+    public function check_table_all_in()
+    {
+        $not_all_in = [];
+        foreach ($this->seats as $seat) {
+            if ($seat->status->active()) $not_all_in[] = $seat;
+        }
+        if (count($not_all_in) > 1) return;
+        $this->config['status'] = TableStatus::ALLIN;
     }
     public function sit_out(Seat $seat): void
     {
