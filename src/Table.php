@@ -408,9 +408,10 @@ class Table
         $amount = max($amount, $this->last_raise_amount);
         $seat->bet += $amount;
         $seat->total_bet += $amount;
+        $amount = min($amount, $seat->get_stack()->get_amount());
         $this->pots[count($this->pots) - 1]->contribute($amount, $seat);
         $this->chat($seat->get_player()->get_name() . " calls $" . number_format($amount, 2, '.', ','));
-        if ($seat->get_stack()->get_amount() === 0) {
+        if ($seat->get_stack()->get_amount() <= 0) {
             $seat->set_status(SeatStatus::ALLIN);
             $this->chat($seat->get_player()->get_name() . " is ALL-IN!");
         } else $seat->set_status(SeatStatus::CALLED);
