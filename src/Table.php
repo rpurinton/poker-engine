@@ -325,7 +325,7 @@ class Table
                 $max_raise_amount_to = min($max_raise_amount_to, $max_opponent_stack);
                 $available_actions["c"] = "Call $" . number_format($bet_diff, 2, '.', ',');
                 if ($min_raise_amount_by < $max_opponent_stack) {
-                    $available_actions["b"] = "Bet/Raise BY <$" . number_format($min_raise_amount_by, 2, '.', ',') . " <=> $" . number_format($max_raise_amount_by, 2, '.', ',') . ">";
+                    $available_actions["b"] = "Bet/Raise BY [$" . number_format($min_raise_amount_by, 2, '.', ',') . " <=> $" . number_format($max_raise_amount_by, 2, '.', ',') . "]";
                     $available_actions["a"] = "All-In for $" . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',') . ' more';
                 }
             } else if ($seat->get_stack()->get_amount() < $bet_diff) {
@@ -355,7 +355,7 @@ class Table
             $max_raise_amount_to = min($max_raise_amount_to, $max_opponent_stack);
             $available_actions["c"] = "Check";
             if ($min_raise_amount_by < $max_opponent_stack) {
-                $available_actions["b"] = "Bet/Raise BY <$" . number_format($min_raise_amount_by, 2, '.', ',') . " <=> $" . number_format($max_raise_amount_by, 2, '.', ',') . ">";
+                $available_actions["b"] = "Bet/Raise BY [$" . number_format($min_raise_amount_by, 2, '.', ',') . " <=> $" . number_format($max_raise_amount_by, 2, '.', ',') . "]";
                 $available_actions["a"] = "All-In for " . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
             }
         }

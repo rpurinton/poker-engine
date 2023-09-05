@@ -147,7 +147,7 @@ class Seat
             $user_message1 .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t [" . implode("] [", $this->cards) . "]\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
             $user_message1 .= "Community Cards: [" . implode("] [", $this->table->communityCards) . "]\n";
             $messages[] = ["role" => "user", "content" => $this->minify_prompt($user_message1)];
-            $user_message2 = "Hey " . $this->player->get_name() . " its your move... play smart!  if you have the nuts you must raise on the river! use GTO strategy to determine the best move in this specific scenario, then use the take_action function to make your move!\n";
+            $user_message2 = "Hey " . $this->player->get_name() . " its your move... play smart!  if you have the nuts you must raise on the river! use GTO strategy to determine the best move in this specific scenario!\n";
             $messages[] = ["role" => "user", "content" => $this->minify_prompt($user_message2)];
             $options_message = "";
             foreach ($options as $key => $option) $options_message .= "[" . strtolower($key) . "] " . $option . "\n";
@@ -197,17 +197,16 @@ class Seat
                 continue;
             }
             foreach ($response->choices as $result) {
-                if ($result->message->content != "") $this->table->chat($this->player->get_name() . " said: " . $result->message->content);
                 if ($result->finishReason == "function_call") {
                     if ($result->message->functionCall->name == "take_action") {
                         $json_string = $result->message->functionCall->arguments;
                         $data = json_decode($json_string, true);
                         print_r($data);
                         if (isset($data["chat_message"]) && $data["chat_message"] != "") $this->table->chat($this->player->get_name() . " said: " . $data["chat_message"]);
-                        if (array_key_exists($data["action"], $options)) {
+                        $char = strtolower(substr($data["action"], 0, 1));
+                        if ($char == "r") $char = "b";
+                        if (array_key_exists($char, $options)) {
                             $answered = true;
-                            $char = strtolower(substr($data["action"], 0, 1));
-                            if ($char == "r") $char = "b";
                             switch ($char) {
                                 case "c":
                                     if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
@@ -219,6 +218,11 @@ class Seat
                                 case "b":
                                     $amount = str_replace(",", "", $data["amount"]);
                                     $amount = str_replace("$", "", $amount);
+                                    $amount = str_replace("<", "", $amount);
+                                    $amount = str_replace(">", "", $amount);
+                                    $amount = str_replace(" ", "", $amount);
+                                    $amount = str_replace("[", "", $amount);
+                                    $amount = str_replace("]", "", $amount);
                                     $amount = (float)$amount;
                                     if (!is_numeric($amount) || $amount <= 0) {
                                         echo ("AI returned invalid amount (" . $data["amount"] . "), Retrying...\n");
@@ -237,7 +241,8 @@ class Seat
                     }
                 }
             }
-            echo ("\n");
+            if (!$answered) echo ($this->player->get_name() . " is thinking...\n");
+            else echo ("\n");
         }
     }
 
