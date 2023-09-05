@@ -147,7 +147,7 @@ class Seat
             $user_message1 .= $this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t [" . implode("] [", $this->cards) . "]\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n";
             $user_message1 .= "Community Cards: [" . implode("] [", $this->table->communityCards) . "]\n";
             $messages[] = ["role" => "user", "content" => $this->minify_prompt($user_message1)];
-            $user_message2 = "Hey " . $this->player->get_name() . " its your move... play smart!  if you have the nuts you must raise on the river! use GTO strategy to determine the best move in this specific scenario!\n";
+            $user_message2 = "Hey " . $this->player->get_name() . " its your move... play smart!  if you have the nuts you must raise on the river! use GTO strategy to determine the best move in this specific scenario and then take_action!\n";
             $messages[] = ["role" => "user", "content" => $this->minify_prompt($user_message2)];
             $options_message = "";
             foreach ($options as $key => $option) $options_message .= "[" . strtolower($key) . "] " . $option . "\n";

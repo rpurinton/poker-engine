@@ -8,7 +8,10 @@ namespace RPurinton\poker;
 require_once(__DIR__ . '/vendor/autoload.php');
 
 $build_info = json_decode(file_get_contents('build_info.json'), true);
-echo ("poker (cli) v" . $build_info["number"] . " (built: " . $build_info["date"] . ")\n");
+// add periods between each digit
+$version_number = implode(".", str_split($build_info["number"]));
+if ($build_info["number"] < 100) $version_number = "0." . $version_number;
+echo ("poker (cli) v$version_number (built: " . $build_info["date"] . ")\n");
 
 require_once('src/Casino.php');
 $casino = new Casino("My Casino");
