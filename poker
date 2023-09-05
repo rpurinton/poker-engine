@@ -1558,7 +1558,7 @@ class Seat
                         if (isset($data["chat_message"]) && $data["chat_message"] != "") $this->table->chat($this->player->get_name() . " said: " . $data["chat_message"]);
                         if (array_key_exists($data["action"], $options)) {
                             $answered = true;
-                            $char = $data["action"];
+                            $char = strtolower($data["action"]);
                             switch ($char) {
                                 case "c":
                                     if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
@@ -1588,12 +1588,9 @@ class Seat
                                 case "a":
                                     $this->table->all_in($this);
                                     break;
-                                case "q":
-                                    echo ("Thanks for Playing!\n");
-                                    exit();
-                                    break;
                                 default:
-                                    $this->table->check($this);
+                                    echo ("AI returned invalid action (" . $data["action"] . "), Retrying...\n");
+                                    $answered = false;
                                     break;
                             }
                         }
@@ -1682,9 +1679,6 @@ class Seat
             case "q":
                 echo ("Thanks for Playing!\n");
                 exit();
-                break;
-            default:
-                $this->table->check($this);
                 break;
         }
     }
@@ -1987,7 +1981,7 @@ class Table
                 $available_actions["c"] = "Call $" . number_format($bet_diff, 2, '.', ',');
                 $available_actions["b"] = "Bet/Raise BY <amount> (minimum: $" . number_format($min_raise_amount_by, 2, '.', ',') . ")";
                 $available_actions["r"] = "Bet/Raise TO <amount> (minimum: $" . number_format($min_raise_amount_to, 2, '.', ',') . ")";
-                $available_actions["a"] = "Raise All In for $" . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
+                $available_actions["a"] = "Raise All In for $" . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',') . "more";
             } else if ($seat->get_stack()->get_amount() < $bet_diff) {
                 $available_actions["a"] = "Call All In for Less (" . $seat->get_stack() . ")";
             } else if ($seat->get_stack()->get_amount() == $bet_diff) {
@@ -2003,7 +1997,7 @@ class Table
                 }
             }
             $available_actions["c"] = "Check";
-            $available_actions["r"] = "Bet/Raise TO <amount> (minimum: " . $this->config["bigBlind"] . ")";
+            $available_actions["r"] = "Bet/Raise TO <amount> (minimum: " . number_format($this->config["bigBlind"], 2, '.', ',') . ")";
             $available_actions["a"] = "Raise All In for " . number_format(min($seat->get_stack()->get_amount(), $max_opponent_stack), 2, '.', ',');
         }
         return $available_actions;

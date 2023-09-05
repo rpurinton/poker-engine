@@ -204,7 +204,7 @@ class Seat
                         if (isset($data["chat_message"]) && $data["chat_message"] != "") $this->table->chat($this->player->get_name() . " said: " . $data["chat_message"]);
                         if (array_key_exists($data["action"], $options)) {
                             $answered = true;
-                            $char = $data["action"];
+                            $char = strtolower($data["action"]);
                             switch ($char) {
                                 case "c":
                                     if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
@@ -234,12 +234,9 @@ class Seat
                                 case "a":
                                     $this->table->all_in($this);
                                     break;
-                                case "q":
-                                    echo ("Thanks for Playing!\n");
-                                    exit();
-                                    break;
                                 default:
-                                    $this->table->check($this);
+                                    echo ("AI returned invalid action (" . $data["action"] . "), Retrying...\n");
+                                    $answered = false;
                                     break;
                             }
                         }
@@ -332,9 +329,6 @@ class Seat
             case "q":
                 echo ("Thanks for Playing!\n");
                 exit();
-                break;
-            default:
-                $this->table->check($this);
                 break;
         }
     }
