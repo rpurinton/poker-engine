@@ -149,9 +149,8 @@ class Seat
             $messages[] = ["role" => "user", "content" => $this->minify_prompt($user_message1)];
             $user_message2 = "Hey " . $this->player->get_name() . " its your move... play smart!  if you have the nuts you must raise on the river! use GTO strategy to determine the best move in this specific scenario and then take_action!\n";
             $messages[] = ["role" => "user", "content" => $this->minify_prompt($user_message2)];
-            $options_message = "";
-            foreach ($options as $key => $option) $options_message .= "[" . strtolower($key) . "] " . $option . "\n";
-            echo ($options_message);
+            $options_json = json_encode($options);
+            print_r($options);
             $prompt = [
                 "model" => $model,
                 "messages" => $messages,
@@ -168,7 +167,7 @@ class Seat
                             'properties' => [
                                 'action' => [
                                     'type' => 'string',
-                                    'description' => "a single lower letter representing the action you want to take: available options:\n$options_message",
+                                    'description' => "a single lower letter representing the action you want to take of the following available options only:\n$options_json",
                                 ],
                                 'amount' => [
                                     'type' => 'string',
