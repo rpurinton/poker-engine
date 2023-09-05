@@ -116,11 +116,11 @@ class Seat
         // if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
         // else $this->table->check($this);
         // return;
-        echo ($this->player->get_name() . " is thinking...\n");
+        echo ($this->player->get_name() . " [" . implode("] [", $this->cards) . "] " . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "...");
         $answered = false;
         while (!$answered) {
             $model = "gpt-3.5-turbo-0613";
-            $system_message = implode("\n", $this->table->get_chat_history(3596));
+            $system_message = implode("\n", $this->table->get_chat_history(2048));
             $system_message .= "\n=============================================================\n";
             foreach ($this->table->pots as $key => $pot) {
                 if ($key == 0) $pot_display_name = "Main Pot";

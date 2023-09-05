@@ -12,10 +12,10 @@ enum Suit
     public function display(): string
     {
         return match ($this) {
-            Suit::CLUBS => 'c',
-            Suit::DIAMONDS => 'd',
-            Suit::HEARTS => 'h',
-            Suit::SPADES => 's',
+            Suit::CLUBS => "c",
+            Suit::DIAMONDS => "d",
+            Suit::HEARTS => "h",
+            Suit::SPADES => "s"
         };
     }
 

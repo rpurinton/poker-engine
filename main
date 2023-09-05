@@ -1,6 +1,7 @@
 #!/usr/local/bin/php -f
 <?php
-// basic heads up example
+
+// SnG Example
 
 namespace RPurinton\poker;
 
@@ -11,31 +12,58 @@ echo ("poker (cli) v" . $build_info["number"] . " (built: " . $build_info["date"
 
 require_once('src/Casino.php');
 $casino = new Casino("My Casino");
+
+$player_names = [
+    "Lily",
+    "Adam",
+    "Bella",
+    "Ursula",
+    "Finley",
+    "Stella",
+    "Derek",
+    "Penelope",
+    "Frank"
+];
+
+$tournament_blinds = [
+    [10, 20],
+    [15, 30],
+    [20, 40],
+    [25, 50],
+    [30, 60],
+    [40, 80],
+    [50, 100],
+    [60, 120],
+    [75, 150],
+    [100, 200],
+    [125, 250],
+    [150, 300],
+    [200, 400],
+    [250, 500]
+];
+
 $table = $casino->add_table(new Table([
     "id" => 1,
-    "name" => "My Table",
-    "seats" => 3,
-    "minBuyIn" => 200,
-    "maxBuyIn" => 500,
-    "smallBlind" => 2,
-    "bigBlind" => 5
+    "name" => "SnG 1",
+    "seats" => 9,
+    "minBuyIn" => 1500,
+    "maxBuyIn" => 1500,
 ]));
 
-$player1 = $casino->add_player(new Player("Russell", PlayerType::HUMAN));
-$casino->buy_chips($player1, 1000);
-$table->seat_player($player1, $table->seats[1])->buy_chips(500);
+for ($i = 0; $i < $table->config["seats"]; $i++) {
+    $players[$i] = $casino->add_player(new Player($player_names[$i], PlayerType::AI));
+    $casino->buy_chips($players[$i], 1500);
+    $table->seat_player($players[$i], $table->seats[$i + 1])->buy_chips(1500);
+}
 
-$player2 = $casino->add_player(new Player("Lily", PlayerType::AI));
-$casino->buy_chips($player2, 1000);
-$table->seat_player($player2, $table->seats[2])->buy_chips(500);
-
-$player3 = $casino->add_player(new Player("Stella", PlayerType::AI));
-$casino->buy_chips($player3, 1000);
-$table->seat_player($player3, $table->seats[3])->buy_chips(500);
-
-$continue = true;
-while ($continue) $continue = $table->new_hand();
-
-foreach ($table->seats as $seat) $seat->cash_out();
-foreach ($casino->players as $player) $casino->cash_out($player);
-//print_r($table->chat_history);
+$blind_index = -1;
+while (true) {
+    $blind_index++;
+    if ($blind_index > count($tournament_blinds) - 1) $blind_index = count($tournament_blinds) - 1;
+    // blinds go up each 9 hands
+    for ($hands = 0; $hands < 9; $hands++) {
+        $table->config["smallBlind"] = $tournament_blinds[$blind_index][0];
+        $table->config["bigBlind"] = $tournament_blinds[$blind_index][1];
+        $table->new_hand();
+    }
+}

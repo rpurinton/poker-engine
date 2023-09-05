@@ -12,7 +12,7 @@ require_once(__DIR__ . '/HandEvaluator.php');
 class Table
 {
     public array $seats = [];
-    private array $config = [
+    public array $config = [
         "id" => null,
         "status" => TableStatus::WAITING_FOR_PLAYERS,
         "GameType" => GameType::TEXAS_HOLDEM,
@@ -309,6 +309,7 @@ class Table
 
     public function fold(Seat $seat): void
     {
+        echo ("\r                                                                                          \r");
         $seat->set_status(SeatStatus::FOLDED);
         $this->chat($seat->get_player()->get_name() . " folds.");
         foreach ($this->pots as $pot) unset($pot->eligible[$seat->seat_num]);
@@ -336,12 +337,14 @@ class Table
 
     public function check(Seat $seat): void
     {
+        echo ("\r                                                                                          \r");
         $seat->set_status(SeatStatus::CHECKED);
         $this->chat($seat->get_player()->get_name() . " checks.");
     }
 
     public function call(Seat $seat): void
     {
+        echo ("\r                                                                                          \r");
         $diff_amount = $this->bet - $seat->bet;
         if ($diff_amount == $seat->get_stack()->get_amount()) $seat->set_status(SeatStatus::ALLIN);
         else $seat->set_status(SeatStatus::CALLED);
@@ -353,6 +356,7 @@ class Table
 
     public function bet(Seat $seat, $amount): void
     {
+        echo ("\r                                                                                          \r");
         $amount = min($amount, $seat->get_stack()->get_amount());
         $amount = max($amount, $this->config['bigBlind']);
         foreach ($this->seats as $other_seat) {
@@ -372,6 +376,7 @@ class Table
 
     public function raise(Seat $seat, $amount): void
     {
+        echo ("\r                                                                                          \r");
         $amount -= $seat->bet;
         $amount = min($amount, $seat->get_stack()->get_amount());
         $amount = max($amount, $this->last_raise_amount * 2);
@@ -394,6 +399,7 @@ class Table
 
     public function all_in(Seat $seat): void
     {
+        echo ("\r                                                                                          \r");
         $seat->set_status(SeatStatus::ALLIN);
         $amount = $seat->get_stack()->get_amount();
         $seat->bet += $seat->get_stack()->get_amount();
@@ -597,6 +603,7 @@ class Table
     public function chat($message)
     {
         $this->chat_history[] = ["message" => $message, "tokens" => count($this->encoder->encode($message))];
+        echo ("\r                                                                                          \r");
         echo ($message . "\n");
     }
 
@@ -609,6 +616,6 @@ class Table
             if ($token_count > $token_limit) break;
             $chat_history[] = $chat["message"];
         }
-        return $chat_history;
+        return array_reverse($chat_history);
     }
 }
