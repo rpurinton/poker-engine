@@ -224,12 +224,6 @@ class Table
             $results = $pot->payout($winners, $pot_display);
             foreach ($results as $result) $this->chat($result);
         }
-        echo ("Shuffling...");
-        for ($i = 0; $i < 3; $i++) {
-            echo (".");
-            sleep(1);
-        }
-        echo ("\n");
     }
 
     private function betting_round(): void
@@ -238,11 +232,7 @@ class Table
         foreach ($this->pots as $key => $pot) {
             if ($key == 0) $pot_display_name = "Main Pot";
             else $pot_display_name = "Side Pot " . $key;
-            $eligible_seats = array_keys($pot->eligible);
-            $eliglbe_player_names = [];
-            foreach ($eligible_seats as $seat_num) $eliglbe_player_names[] = $this->seats[$seat_num]->get_player()->get_name() . " ($" . number_format($pot->eligible[$seat_num]["contributed"], 2, '.', ',') . ")";
-            $eliglbe_player_names_string = implode(", ", $eliglbe_player_names);
-            $status_message .= $pot_display_name . ": $pot [$eliglbe_player_names_string]\n";
+            $status_message .= $pot_display_name . ": $pot\n";
         }
         $this->chat($status_message);
         $action_order = $this->get_action_order();

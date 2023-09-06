@@ -261,17 +261,9 @@ class Seat
 
     public function prompt_human($options): void
     {
-        // if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
-        // else $this->table->check($this);
-        // return;
         echo ("=======================IT'S ON YOU!==========================\n");
-        foreach ($this->table->pots as $key => $pot) {
-            if ($key == 0) $pot_display_name = "Main Pot";
-            else $pot_display_name = "Side Pot " . $key;
-            echo ($pot_display_name . ": $pot\n");
-        }
-        echo ("Seat\tStack\t\tIn For\tName\tPocket\tHand\n");
-        echo ($this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t[" . implode("] [", $this->cards) . "]\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n");
+        echo ("Stack\t\tIn For\tName\tPocket\n");
+        echo ($this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t[" . implode("] [", $this->cards) . "]\nYour best hand is: " . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n");
         foreach ($options as $key => $option) {
             echo (" [" . strtoupper($key) . "] " . $option . "\n");
         }

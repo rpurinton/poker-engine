@@ -20,7 +20,13 @@ class Deck
 
     public function shuffle()
     {
-        shuffle($this->cards);
+                echo ("Shuffling...");
+        for ($i = 0; $i < 5; $i++) {
+            echo (".");
+            shuffle($this->cards);
+            sleep(1);
+        }
+        echo ("\n");
     }
 
     public function cut()
