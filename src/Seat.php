@@ -43,7 +43,21 @@ class Seat
     public function set_player(Player $player): void
     {
         $this->player = $player;
-        if ($player->type == PlayerType::AI) $this->openai = OpenAI::client(json_decode(file_get_contents(__DIR__ . "/../conf.d//openai.json"))->token);
+        $conf_dir = __DIR__ . "/../conf.d";
+        if (!file_exists($conf_dir)) $conf_dir = __DIR__ . "/conf.d";
+        $openai_file = $conf_dir . "/openai.json";
+        if (!file_exists($openai_file)) {
+            $conf_file["token"] = "<paste your openai api key here>";
+            file_put_contents($openai_file, json_encode($conf_file, JSON_PRETTY_PRINT));
+            echo ("OpenAI API Key not found, please paste your API key into the file: $openai_file\n");
+            exit();
+        }
+        $conf_data = json_decode(file_get_contents($openai_file));
+        if (!isset($conf_data->token) || $conf_data->token == "" || $conf_data->token == "<paste your openai api key here>") {
+            echo ("OpenAI API Key not found, please paste your API key into the file: $openai_file\n");
+            exit();
+        }
+        if ($player->type == PlayerType::AI) $this->openai = OpenAI::client($conf_data->token);
     }
 
     public function get_stack(): Pot
