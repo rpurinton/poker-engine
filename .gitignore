@@ -1,2 +1,2 @@
 vendor
-openai_token.txt
+conf.d/openai.json

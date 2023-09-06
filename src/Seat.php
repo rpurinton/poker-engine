@@ -43,7 +43,7 @@ class Seat
     public function set_player(Player $player): void
     {
         $this->player = $player;
-        if ($player->type == PlayerType::AI) $this->openai = OpenAI::client(file_get_contents(__DIR__ . "/openai_token.txt"));
+        if ($player->type == PlayerType::AI) $this->openai = OpenAI::client(json_decode(file_get_contents(__DIR__ . "/../conf.d//openai.json"))->token);
     }
 
     public function get_stack(): Pot
@@ -113,10 +113,8 @@ class Seat
 
     public function prompt_ai($options): void
     {
-        // if (substr($options["c"], 0, 4) == "Call") $this->table->call($this);
-        // else $this->table->check($this);
-        // return;
-        echo ($this->player->get_name() . " [" . implode("] [", $this->cards) . "] " . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "...\n");
+        //echo ($this->player->get_name() . " [" . implode("] [", $this->cards) . "] " . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "...\n");
+        echo ($this->player->get_name() . "...");
         $answered = false;
         while (!$answered) {
             $messages = [];
@@ -150,7 +148,7 @@ class Seat
             $user_message2 = "Hey " . $this->player->get_name() . " its your move... play smart!  if you have the nuts you must raise on the river! use GTO strategy to determine the best move in this specific scenario and then take_action!\n";
             $messages[] = ["role" => "user", "content" => $this->minify_prompt($user_message2)];
             $options_json = json_encode($options);
-            print_r($options);
+            //print_r($options);
             $prompt = [
                 "model" => $model,
                 "messages" => $messages,
@@ -186,13 +184,16 @@ class Seat
             try {
                 $response = $this->openai->chat()->create($prompt);
             } catch (\Exception $e) {
-                echo ("Error: " . $e->getMessage() . "\n");
+                //echo ("Error: " . $e->getMessage() . "\n");
+                echo (".");
                 continue;
             } catch (\Throwable $e) {
-                echo ("Error: " . $e->getMessage() . "\n");
+                //echo ("Error: " . $e->getMessage() . "\n");
+                echo (".");
                 continue;
             } catch (\Error $e) {
-                echo ("Error: " . $e->getMessage() . "\n");
+                //echo ("Error: " . $e->getMessage() . "\n");
+                echo (".");
                 continue;
             }
             foreach ($response->choices as $result) {
@@ -200,7 +201,7 @@ class Seat
                     if ($result->message->functionCall->name == "take_action") {
                         $json_string = $result->message->functionCall->arguments;
                         $data = json_decode($json_string, true);
-                        print_r($data);
+                        //print_r($data);
                         if (isset($data["chat_message"]) && $data["chat_message"] != "") $this->table->chat($this->player->get_name() . " said: " . $data["chat_message"]);
                         $char = strtolower(substr($data["action"], 0, 1));
                         if ($char == "r") $char = "b";
@@ -240,8 +241,7 @@ class Seat
                     }
                 }
             }
-            if (!$answered) echo ($this->player->get_name() . " is thinking...\n");
-            else echo ("\n");
+            if (!$answered) echo (".");
         }
     }
 

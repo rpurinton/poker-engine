@@ -7,8 +7,7 @@ namespace RPurinton\poker;
 
 require_once(__DIR__ . '/vendor/autoload.php');
 
-$build_info = json_decode(file_get_contents('build_info.json'), true);
-// add periods between each digit
+$build_info = json_decode(file_get_contents(__DIR__ . '/conf.d/build_info.json'), true);
 $version_number = implode(".", str_split($build_info["number"]));
 if ($build_info["number"] < 100) $version_number = "0." . $version_number;
 echo ("poker (cli) v$version_number (built: " . $build_info["date"] . ")\n");
@@ -16,109 +15,27 @@ echo ("poker (cli) v$version_number (built: " . $build_info["date"] . ")\n");
 require_once('src/Casino.php');
 $casino = new Casino("My Casino");
 
-$player_names = [
-    "Lily",
-    "Adam",
-    "Bella",
-    "Ursula",
-    "Finley",
-    "Stella",
-    "Derek",
-    "Max",
-    "Frank"
-];
+$player_names = json_decode(file_get_contents(__DIR__ . '/conf.d/players.json'), true);
+$tournament_blinds = json_decode(file_get_contents(__DIR__ . '/conf.d/blinds.json'), true);
+$table_config = json_decode(file_get_contents(__DIR__ . '/conf.d/table.json'), true);
 
-$tournament_blinds = [
-    [10, 20],
-    [15, 30],
-    [20, 40],
-    [25, 50],
-    [30, 60],
-    [40, 80],
-    [50, 100],
-    [60, 120],
-    [75, 150],
-    [100, 200],
-    [125, 250],
-    [150, 300],
-    [200, 400],
-    [250, 500],
-    [300, 600],
-    [400, 800],
-    [500, 1000],
-    [600, 1200],
-    [800, 1600],
-    [1000, 2000],
-    [1200, 2400],
-    [1500, 3000],
-    [2000, 4000],
-    [2500, 5000],
-    [3000, 6000],
-    [4000, 8000],
-    [5000, 10000],
-    [6000, 12000],
-    [8000, 16000],
-    [10000, 20000],
-    [12000, 24000],
-    [15000, 30000],
-    [20000, 40000],
-    [25000, 50000],
-    [30000, 60000],
-    [40000, 80000],
-    [50000, 100000],
-    [60000, 120000],
-    [80000, 160000],
-    [100000, 200000],
-    [120000, 240000],
-    [150000, 300000],
-    [200000, 400000],
-    [250000, 500000],
-    [300000, 600000],
-    [400000, 800000],
-    [500000, 1000000],
-    [600000, 1200000],
-    [800000, 1600000],
-    [1000000, 2000000],
-    [1200000, 2400000],
-    [1500000, 3000000],
-    [2000000, 4000000],
-    [2500000, 5000000],
-    [3000000, 6000000],
-    [4000000, 8000000],
-    [5000000, 10000000],
-    [6000000, 12000000],
-    [8000000, 16000000],
-    [10000000, 20000000],
-    [12000000, 24000000],
-    [15000000, 30000000],
-    [20000000, 40000000],
-    [25000000, 50000000],
-    [30000000, 60000000],
-    [40000000, 80000000],
-];
-
-$table = $casino->add_table(new Table([
-    "id" => 1,
-    "name" => "SnG 1",
-    "seats" => 6,
-    "minBuyIn" => 1500,
-    "maxBuyIn" => 1500,
-]));
+$table = $casino->add_table(new Table($table_config));
 
 for ($i = 0; $i < $table->config["seats"]; $i++) {
-    $players[$i] = $casino->add_player(new Player($player_names[$i], PlayerType::AI));
+    $player_type = $i == 0 ? PlayerType::HUMAN : PlayerType::AI;
+    $players[$i] = $casino->add_player(new Player($player_names[$i], $player_type));
     $casino->buy_chips($players[$i], 1500);
     $table->seat_player($players[$i], $table->seats[$i + 1])->buy_chips(1500);
 }
 
 $blind_index = -1;
-while (true) {
+$active = true;
+while ($active) {
     $blind_index++;
     if ($blind_index > count($tournament_blinds) - 1) $blind_index = count($tournament_blinds) - 1;
-    // blinds go up each 9 hands
     for ($hands = 0; $hands < 9; $hands++) {
         $table->config["smallBlind"] = $tournament_blinds[$blind_index][0];
         $table->config["bigBlind"] = $tournament_blinds[$blind_index][1];
-        $table->new_hand();
+        $active = $table->new_hand();
     }
 }
