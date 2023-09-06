@@ -116,13 +116,14 @@ class Table
         }
         $this->hand_count++;
         $hand_count_display = number_format($this->hand_count, 0, '.', ',');
-        echo ("\n\n\n===============STARTING HAND #$hand_count_display====================\n");
+        echo ("\n\n===============STARTING HAND #$hand_count_display====================\n");
         $this->chat($this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $this->muck = [];
         $this->communityCards = [];
-        $this->advance_button();
         $this->deck = new Deck();
+        if ($this->hand_count === 1) $this->randomize_button();
+        else  $this->advance_button();
         $this->action_position = $this->post_blinds();
         $this->deck->shuffle();
         $this->deck->cut();
@@ -223,11 +224,17 @@ class Table
             $results = $pot->payout($winners, $pot_display);
             foreach ($results as $result) $this->chat($result);
         }
+        echo ("Shuffling...");
+        for ($i = 0; $i < 3; $i++) {
+            echo (".");
+            sleep(1);
+        }
+        echo ("\n");
     }
 
     private function betting_round(): void
     {
-        $status_message = "\n=================CURRENT POTS=================\n";
+        $status_message =  ("===============POTS================\n");
         foreach ($this->pots as $key => $pot) {
             if ($key == 0) $pot_display_name = "Main Pot";
             else $pot_display_name = "Side Pot " . $key;
@@ -454,9 +461,6 @@ class Table
         echo ("\r                                                                                          \r");
         extract($this->get_min_max($seat));
         $amount = $bet_diff;
-        $amount = min($amount, $max_raise_amount_by);
-        $amount = max($amount, $min_raise_amount_by);
-        $amount = max($amount, $this->last_raise_amount);
         $amount = min($amount, $seat->get_stack()->get_amount());
         $seat->bet += $amount;
         $seat->total_bet += $amount;
@@ -650,6 +654,12 @@ class Table
         $this->last_raise_amount = $this->config['bigBlind'] - $this->config['smallBlind'];
         $this->chat($big_blind_seat->get_player()->get_name() . " posts the big blind of $" . $big_blind_amount);
         return $big_blind_seat_number;
+    }
+
+    private function randomize_button(): void
+    {
+        $this->button_position = array_rand($this->seats);
+        $this->chat("Randomly put the button at seat " . $this->button_position . ". ({$this->seats[$this->button_position]->get_player()->get_name()})");
     }
 
     private function advance_button(): void

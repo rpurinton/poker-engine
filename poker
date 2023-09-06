@@ -1495,9 +1495,10 @@ class Seat
             $messages = [];
             $model = "gpt-3.5-turbo-0613";
             $system_message2 = "Welcome to the poker game! Get ready for an exciting round of Texas Hold'em. As you navigate through each hand, remember to consider the following factors that can influence your decision-making:
-                Hand Strength: Evaluate the ranking and potential of your starting hand.
+                Hand Strength: Evaluate the ranking and potential of your starting hand versus your opponents ranges.
                 Chip Stack Size: Assess your chip stack compared to blinds and antes.
                 Position at the Table: Utilize your position to make informed decisions.
+                Tournament Stage: Consider the stage of the tournament and number of players at the table.
                 Betting History: Analyze the betting patterns and tendencies of your opponents.
                 Table Dynamics: Observe player interactions, chat messages, and betting behavior.
                 Blind Levels and Tournament Stage: Adapt your strategy based on the stage of the tournament and number of players at the table.
@@ -1506,11 +1507,10 @@ class Seat
                 
                 Incorporating these factors into your decision-making will lead to a more strategic and profitable gameplay experience. Good luck, and may the best hand win!";
             $messages[] = ["role" => "system", "content" => $this->minify_prompt($system_message2)];
-            $system_message1 = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . " in a friendly winner-takes-all home sit-and-go tournament with your co-workers from Discommand.com\n";
-            $system_message1 .= "Lily is the CEO, Adam is the Architect/CTO, Bella is the COO, Ursula is the CLO/GC, Finley is the CFO, Stella is Chief Security Officer, Derek is the MySQL DBA, Max is a Graphics Designer, and Frank is the Project Manager.\n";
+            $system_message1 = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . "\n";
             $system_message1 .= "Everyone starts with 1500 chips and the blinds start at $10/$20 and go up every 9 hands.\n";
-            $system_message1 .= "You are currently in hand #" . $this->table->hand_count . " of the tournament.\n";
-            $system_message1 .= "We have included the history of the table chat and the current state of the table below.\n";
+            $system_message1 .= "You are currently in hand #" . $this->table->hand_count . " of the tournament and the blinds are currently at $" . number_format($this->table->config["smallBlind"], 2, ".", ",") . "/$" . number_format($this->table->config["bigBlind"], 2, ".", ",") . "\n";
+            $system_message1 .= "We have included as much of the recent history of the table chat and the current state of the table below.\n";
             $messages[] = ["role" => "system", "content" => $this->minify_prompt($system_message1)];
             $user_message1 = implode("\n", $this->table->get_chat_history(3072));
             $messages[] = ["role" => "user", "content" => $this->minify_prompt($user_message1)];
@@ -1615,16 +1615,16 @@ class Seat
     }
     public function prompt_human($options): void
     {
-                                echo ("=============================================================\n");
+                                echo ("=======================IT'S ON YOU!==========================\n");
         foreach ($this->table->pots as $key => $pot) {
             if ($key == 0) $pot_display_name = "Main Pot";
             else $pot_display_name = "Side Pot " . $key;
             echo ($pot_display_name . ": $pot\n");
         }
-        echo ("Seat\tStack\tIn For\tName\tPocket\tHand\n");
-        echo ($this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n");
+        echo ("Seat\tStack\t\tIn For\tName\tPocket\tHand\n");
+        echo ($this->seat_num . "\t" . $this->get_stack() . "\t$" . number_format($this->total_bet, 2, ".", ",") . "\t" . $this->player->get_name() . "\t[" . implode("] [", $this->cards) . "]\t" . $this->table->HandEvaluator->hand_toString($this->cards, $this->table->communityCards) . "\n");
         foreach ($options as $key => $option) {
-            echo (" [" . strtoupper($key) . "] " . $option . "\t");
+            echo (" [" . strtoupper($key) . "] " . $option . "\n");
         }
         echo (" [T] Chat\n");
         echo ($this->player->get_name() . ": ");
@@ -1789,13 +1789,14 @@ class Table
         }
         $this->hand_count++;
         $hand_count_display = number_format($this->hand_count, 0, '.', ',');
-        echo ("\n\n\n===============STARTING HAND #$hand_count_display====================\n");
+        echo ("\n\n===============STARTING HAND #$hand_count_display====================\n");
         $this->chat($this->config["limit"]->display() . " " . $this->config['GameType']->display() . " [$" . $this->config['smallBlind'] . "/$" . $this->config['bigBlind'] . "]");
         $this->config['status'] = TableStatus::STARTING;
         $this->muck = [];
         $this->communityCards = [];
-        $this->advance_button();
         $this->deck = new Deck();
+        if ($this->hand_count === 1) $this->randomize_button();
+        else  $this->advance_button();
         $this->action_position = $this->post_blinds();
         $this->deck->shuffle();
         $this->deck->cut();
@@ -1895,10 +1896,16 @@ class Table
             $results = $pot->payout($winners, $pot_display);
             foreach ($results as $result) $this->chat($result);
         }
+        echo ("Shuffling...");
+        for ($i = 0; $i < 3; $i++) {
+            echo (".");
+            sleep(1);
+        }
+        echo ("\n");
     }
     private function betting_round(): void
     {
-        $status_message = "\n=================CURRENT POTS=================\n";
+        $status_message =  ("===============POTS================\n");
         foreach ($this->pots as $key => $pot) {
             if ($key == 0) $pot_display_name = "Main Pot";
             else $pot_display_name = "Side Pot " . $key;
@@ -2108,9 +2115,6 @@ class Table
         echo ("\r                                                                                          \r");
         extract($this->get_min_max($seat));
         $amount = $bet_diff;
-        $amount = min($amount, $max_raise_amount_by);
-        $amount = max($amount, $min_raise_amount_by);
-        $amount = max($amount, $this->last_raise_amount);
         $amount = min($amount, $seat->get_stack()->get_amount());
         $seat->bet += $amount;
         $seat->total_bet += $amount;
@@ -2287,6 +2291,11 @@ class Table
         $this->last_raise_amount = $this->config['bigBlind'] - $this->config['smallBlind'];
         $this->chat($big_blind_seat->get_player()->get_name() . " posts the big blind of $" . $big_blind_amount);
         return $big_blind_seat_number;
+    }
+    private function randomize_button(): void
+    {
+        $this->button_position = array_rand($this->seats);
+        $this->chat("Randomly put the button at seat " . $this->button_position . ". ({$this->seats[$this->button_position]->get_player()->get_name()})");
     }
     private function advance_button(): void
     {
