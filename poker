@@ -2381,7 +2381,7 @@ $active = true;
 while ($active) {
     $blind_index++;
     if ($blind_index > count($tournament_blinds) - 1) $blind_index = count($tournament_blinds) - 1;
-    for ($hands = 0; $hands < 9; $hands++) {
+    for ($hands = 0; $hands < 9 && $active; $hands++) {
         $table->config["smallBlind"] = $tournament_blinds[$blind_index][0];
         $table->config["bigBlind"] = $tournament_blinds[$blind_index][1];
         $active = $table->new_hand();
