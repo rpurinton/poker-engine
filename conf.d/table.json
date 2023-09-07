@@ -1,7 +1,7 @@
 {
     "id": 1,
     "name": "SnG 1",
-    "seats": 6,
+    "seats": 2,
     "minBuyIn": 1500,
     "maxBuyIn": 1500
 }

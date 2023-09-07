@@ -163,38 +163,38 @@ class Seat
             $messages[] = ["role" => "user", "content" => $this->minify_prompt($user_message2)];
             $options_json = json_encode($options);
             //print_r($options);
-            $prompt = [
-                "model" => $model,
-                "messages" => $messages,
-                "temperature" => 0.986,
-                "top_p" => 0.986,
-                "frequency_penalty" => 1,
-                "presence_penalty" => 1,
-                'functions' => [
-                    [
-                        'name' => 'take_action',
-                        'description' => 'Make your move!',
-                        'parameters' => [
-                            'type' => 'object',
-                            'properties' => [
-                                'action' => [
-                                    'type' => 'string',
-                                    'description' => "a single lower letter representing the action you want to take of the following available options only:\n$options_json",
-                                ],
-                                'amount' => [
-                                    'type' => 'string',
-                                    'description' => 'If betting or raising, the amount you want to raise increase the total bet by or to. Numerical formatted (float value)',
-                                ],
-                                'chat_message' => [
-                                    'type' => 'string',
-                                    'description' => 'continue the chat conversation... the chat message to send to the table (playful fun good natured table banter) (fun part of the game!) (dont reapeat the same message over and over, be creative!)',
-                                ],
-                            ],
-                            'required' => ['action', 'amount', 'chat_message']
-                        ],
+$prompt = [
+    "model" => $model,
+    "messages" => $messages,
+    "temperature" => 0.986,
+    "top_p" => 0.986,
+    "frequency_penalty" => 1,
+    "presence_penalty" => 1,
+    'functions' => [
+        [
+            'name' => 'take_action',
+            'description' => 'Make your move!',
+            'parameters' => [
+                'type' => 'object',
+                'properties' => [
+                    'action' => [
+                        'type' => 'string',
+                        'description' => "a single lower letter representing the action you want to take of the following available options only:\n$options_json",
+                    ],
+                    'amount' => [
+                        'type' => 'string',
+                        'description' => 'If betting or raising, the amount you want to raise increase the total bet by or to. Numerical formatted (float value)',
+                    ],
+                    'chat_message' => [
+                        'type' => 'string',
+                        'description' => 'continue the chat conversation... the chat message to send to the table (playful fun good natured table banter) (fun part of the game!) (dont reapeat the same message over and over, be creative!)',
                     ],
                 ],
-            ];
+                'required' => ['action', 'amount', 'chat_message']
+            ],
+        ],
+    ],
+];
             try {
                 $response = $this->openai->chat()->create($prompt);
             } catch (\Exception $e) {

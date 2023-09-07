@@ -22,7 +22,7 @@ $table_config = json_decode(file_get_contents(__DIR__ . '/conf.d/table.json'), t
 $table = $casino->add_table(new Table($table_config));
 
 for ($i = 0; $i < $table->config["seats"]; $i++) {
-    $player_type = $i == 0 ? PlayerType::HUMAN : PlayerType::AI;
+    $player_type = $i < 2 ? PlayerType::HUMAN : PlayerType::AI;
     $players[$i] = $casino->add_player(new Player($player_names[$i], $player_type));
     $casino->buy_chips($players[$i], 1500);
     $table->seat_player($players[$i], $table->seats[$i + 1])->buy_chips(1500);
