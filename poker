@@ -2339,27 +2339,27 @@ class Table
 
 $build_info = json_decode(file_get_contents(__DIR__ . '/conf.d/build_info.json'), true);
 $version_number = implode(".", str_split($build_info["number"]));
-if ($build_info["number"] < 100) $version_number = "0." . $version_number;
-echo ("poker (cli) v$version_number (built: " . $build_info["date"] . ")\n");
+if ($build_info["number"] < 100) {
+    $version_number = "0.$version_number";
+}
+echo "poker (cli) v$version_number (built: {$build_info["date"]})\n";
 $casino = new Casino("My Casino");
 $player_names = json_decode(file_get_contents(__DIR__ . '/conf.d/players.json'), true);
 $tournament_blinds = json_decode(file_get_contents(__DIR__ . '/conf.d/blinds.json'), true);
 $table_config = json_decode(file_get_contents(__DIR__ . '/conf.d/table.json'), true);
 $table = $casino->add_table(new Table($table_config));
-for ($i = 0; $i < $table->config["seats"]; $i++) {
+foreach ($player_names as $i => $player_name) {
     $player_type = $i < 2 ? PlayerType::HUMAN : PlayerType::AI;
-    $players[$i] = $casino->add_player(new Player($player_names[$i], $player_type));
+    $players[$i] = $casino->add_player(new Player($player_name, $player_type));
     $casino->buy_chips($players[$i], 1500);
     $table->SeatManager->seat_player($players[$i], $table->seats[$i + 1])->buy_chips(1500);
 }
-$blind_index = -1;
-$active = true;
-while ($active) {
-    $blind_index++;
-    if ($blind_index > count($tournament_blinds) - 1) $blind_index = count($tournament_blinds) - 1;
-    for ($hands = 0; $hands < 9 && $active; $hands++) {
-        $table->config["smallBlind"] = $tournament_blinds[$blind_index][0];
-        $table->config["bigBlind"] = $tournament_blinds[$blind_index][1];
-        $active = $table->new_hand();
+foreach ($tournament_blinds as $blinds) {
+    for ($hands = 0; $hands < 9; $hands++) {
+        $table->config["smallBlind"] = $blinds[0];
+        $table->config["bigBlind"] = $blinds[1];
+        if (!$table->new_hand()) {
+            break 2;
+        }
     }
 }
