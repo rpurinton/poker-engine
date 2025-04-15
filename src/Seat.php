@@ -132,9 +132,8 @@ class Seat
         $answered = false;
         while (!$answered) {
             $messages = [];
-            $model = "gpt-3.5-turbo-0613";
+            $model = "gpt-4.1-mini";
             $system_message2 = "Welcome to the poker game! Get ready for an exciting round of Texas Hold'em. As you navigate through each hand, remember to consider the following factors that can influence your decision-making:
-
                 Hand Strength: Evaluate the ranking and potential of your starting hand versus your opponents ranges.
                 Chip Stack Size: Assess your chip stack compared to blinds and antes.
                 Position at the Table: Utilize your position to make informed decisions.
@@ -144,7 +143,6 @@ class Seat
                 Blind Levels and Tournament Stage: Adapt your strategy based on the stage of the tournament and number of players at the table.
                 Stack-to-Pot Ratio (SPR): Consider the relationship between your chip stack and the pot.
                 Player Image: Be aware of your own table image and use it strategically.
-                
                 Incorporating these factors into your decision-making will lead to a more strategic and profitable gameplay experience. Good luck, and may the best hand win!";
             $messages[] = ["role" => "system", "content" => $this->minify_prompt($system_message2)];
             $system_message1 = "Your name is " . $this->player->get_name() . " and you are in seat " . $this->seat_num . "\n";
