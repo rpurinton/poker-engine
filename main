@@ -24,6 +24,7 @@ $table_config = json_decode(file_get_contents(__DIR__ . '/conf.d/table.json'), t
 $table = $casino->add_table(new Table($table_config));
 
 foreach ($player_names as $i => $player_name) {
+    if ($i + 1 > $table->config["seats"]) break;
     $player_type = $i < 2 ? PlayerType::HUMAN : PlayerType::AI;
     $players[$i] = $casino->add_player(new Player($player_name, $player_type));
     $casino->buy_chips($players[$i], 1500);
