@@ -132,7 +132,7 @@ class Seat
         $answered = false;
         while (!$answered) {
             $messages = [];
-            $model = "gpt-4.1-mini";
+            $model = "o3-mini";
             $system_message2 = "Welcome to the poker game! Get ready for an exciting round of Texas Hold'em. As you navigate through each hand, remember to consider the following factors that can influence your decision-making:
                 Hand Strength: Evaluate the ranking and potential of your starting hand versus your opponents ranges.
                 Chip Stack Size: Assess your chip stack compared to blinds and antes.
@@ -161,38 +161,34 @@ class Seat
             $messages[] = ["role" => "user", "content" => $this->minify_prompt($user_message2)];
             $options_json = json_encode($options);
             //print_r($options);
-$prompt = [
-    "model" => $model,
-    "messages" => $messages,
-    "temperature" => 0.986,
-    "top_p" => 0.986,
-    "frequency_penalty" => 1,
-    "presence_penalty" => 1,
-    'functions' => [
-        [
-            'name' => 'take_action',
-            'description' => 'Make your move!',
-            'parameters' => [
-                'type' => 'object',
-                'properties' => [
-                    'action' => [
-                        'type' => 'string',
-                        'description' => "a single lower letter representing the action you want to take of the following available options only:\n$options_json",
-                    ],
-                    'amount' => [
-                        'type' => 'string',
-                        'description' => 'If betting or raising, the amount you want to raise increase the total bet by or to. Numerical formatted (float value)',
-                    ],
-                    'chat_message' => [
-                        'type' => 'string',
-                        'description' => 'continue the chat conversation... the chat message to send to the table (playful fun good natured table banter) (fun part of the game!) (dont reapeat the same message over and over, be creative!)',
+            $prompt = [
+                "model" => $model,
+                "messages" => $messages,
+                'functions' => [
+                    [
+                        'name' => 'take_action',
+                        'description' => 'Make your move!',
+                        'parameters' => [
+                            'type' => 'object',
+                            'properties' => [
+                                'action' => [
+                                    'type' => 'string',
+                                    'description' => "a single lower letter representing the action you want to take of the following available options only:\n$options_json",
+                                ],
+                                'amount' => [
+                                    'type' => 'string',
+                                    'description' => 'If betting or raising, the amount you want to raise increase the total bet by or to. Numerical formatted (float value)',
+                                ],
+                                'chat_message' => [
+                                    'type' => 'string',
+                                    'description' => 'continue the chat conversation... the chat message to send to the table (playful fun good natured table banter) (fun part of the game!) (dont reapeat the same message over and over, be creative!)',
+                                ],
+                            ],
+                            'required' => ['action', 'amount', 'chat_message']
+                        ],
                     ],
                 ],
-                'required' => ['action', 'amount', 'chat_message']
-            ],
-        ],
-    ],
-];
+            ];
             try {
                 $response = $this->openai->chat()->create($prompt);
             } catch (\Exception $e) {
@@ -268,8 +264,7 @@ $prompt = [
         echo (" [T] Chat\n");
         echo ($this->player->get_name() . ": ");
         $valid = false;
-        readline_callback_handler_install('', function () {
-        });
+        readline_callback_handler_install('', function () {});
         while (!$valid) {
             $r = [STDIN];
             $w = NULL;
@@ -283,8 +278,7 @@ $prompt = [
                     $message = trim(fgets($handle));
                     fclose($handle);
                     if ($message != "") $this->table->chat($this->player->get_name() . " said: " . $message);
-                    readline_callback_handler_install('', function () {
-                    });
+                    readline_callback_handler_install('', function () {});
                     echo ($this->player->get_name() . ": ");
                 }
                 if (array_key_exists($input, $options)) {
